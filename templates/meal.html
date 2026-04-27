@@ -1,0 +1,60 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Meal Planner – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Meal Plan...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('meal') }}
+<div class="main"><div class="topbar"><div class="topbar-title">🥗 Personalized Meal Planner</div></div>
+<div class="page-body">
+{% set plans = {
+'weightloss': {'title':'Weight Loss Plan','color':'#ff3d5a','icon':'🔥','desc':'Calorie-controlled meals to help you lose 0.5-1kg/week safely.'},
+'weightgain': {'title':'Weight Gain Plan','color':'#00ff88','icon':'💪','desc':'High-calorie nutritious meals to build healthy weight.'},
+'maintenance': {'title':'Maintenance Plan','color':'#00e5ff','icon':'⚖️','desc':'Balanced meals to maintain your excellent health score.'},
+'balanced': {'title':'Balanced Health Plan','color':'#ffd600','icon':'🌟','desc':'Well-rounded nutrition to improve your overall health score.'}
+} %}
+{% set p = plans[meal_type] %}
+<div class="meal-plan-header anim" style="background:linear-gradient(135deg,{{ p.color }}33,{{ p.color }}11);">
+<div style="font-size:48px;margin-bottom:8px;">{{ p.icon }}</div>
+<h2 style="font-family:var(--font-h);font-size:24px;font-weight:800;color:var(--text-1);">{{ p.title }}</h2>
+<p style="color:var(--text-2);margin-top:6px;">{{ p.desc }}</p>
+{% if data %}<p style="color:var(--text-3);font-size:12px;margin-top:6px;">Based on your BMI: {{ data.bmi }} | Score: {{ data.score }}</p>{% endif %}
+</div>
+<!-- 3 DAY SAMPLE PLAN -->
+{% set meals = {
+'weightloss': [
+  ('Breakfast','Oats with low-fat milk + 1 banana + green tea','~350 cal'),
+  ('Mid-Morning','1 apple or cucumber slices + water','~80 cal'),
+  ('Lunch','Brown rice + dal + grilled chicken/paneer + salad','~500 cal'),
+  ('Evening','Sprouts chaat + lemon water','~120 cal'),
+  ('Dinner','Vegetable soup + 2 chapati + curd','~400 cal'),
+],
+'weightgain': [
+  ('Breakfast','4 eggs + whole grain toast + banana shake','~600 cal'),
+  ('Mid-Morning','Nuts trail mix + full-fat milk','~300 cal'),
+  ('Lunch','White rice + chicken curry + daal + ghee','~750 cal'),
+  ('Evening','Peanut butter sandwich + fruit juice','~350 cal'),
+  ('Dinner','2 chapati + paneer curry + sweet potato','~600 cal'),
+],
+'maintenance': [
+  ('Breakfast','Poha/upma + 1 boiled egg + green tea','~380 cal'),
+  ('Mid-Morning','Mixed nuts + fruit','~150 cal'),
+  ('Lunch','Quinoa/rice + dal + sabzi + salad','~550 cal'),
+  ('Evening','Roasted chickpeas + herbal tea','~100 cal'),
+  ('Dinner','2 chapati + mixed veg + curd','~450 cal'),
+],
+'balanced': [
+  ('Breakfast','Idli/dosa + sambhar + coconut chutney','~400 cal'),
+  ('Mid-Morning','Fruit bowl + water','~120 cal'),
+  ('Lunch','Rice + dal + paneer/chicken + salad + buttermilk','~600 cal'),
+  ('Evening','Makhana/popcorn + green tea','~100 cal'),
+  ('Dinner','2 chapati + sabzi + curd + salad','~450 cal'),
+]
+} %}
+<div class="anim anim-d1">
+{% for meal_time, meal_item, cal in meals[meal_type] %}
+<div class="meal-day">
+<div class="meal-time">{{ meal_time }} <span style="color:var(--text-3);font-weight:400;font-size:12px;">— {{ cal }}</span></div>
+<div class="meal-item">{{ meal_item }}</div>
+</div>{% endfor %}
+</div>
+<div class="warn-box anim anim-d2">⚠️ This is a general meal plan. Consult a registered dietitian for a personalized plan based on your medical conditions.</div>
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>

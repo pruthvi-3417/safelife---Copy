@@ -1,0 +1,365 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Doctor – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.doc-avatar-big{width:90px;height:90px;border-radius:50%;background:var(--grad-cyan);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 12px;animation:pulse-glow 2.5s infinite;}
+.spec-btn{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--navy-3);color:var(--text-2);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:8px;}
+.spec-btn:hover,.spec-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06);}
+.doc-chat-win{height:420px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:rgba(0,0,0,.25);border-radius:10px;border:1px solid var(--border);margin-bottom:14px;}
+.doc-chat-win::-webkit-scrollbar{width:4px;}
+.doc-chat-win::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.doc-msg{display:flex;gap:10px;max-width:88%;animation:msgIn .3s ease;}
+.doc-msg.user{margin-left:auto;flex-direction:row-reverse;}
+.doc-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.doc-msg.bot .doc-av{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.25);}
+.doc-msg.user .doc-av{background:rgba(0,100,255,.2);border:1px solid rgba(0,100,255,.3);}
+.doc-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;}
+.doc-msg.bot .doc-bubble{background:var(--navy-3);border:1px solid var(--border);color:var(--text-2);border-radius:4px 12px 12px 12px;}
+.doc-msg.user .doc-bubble{background:rgba(0,100,255,.12);border:1px solid rgba(0,100,255,.2);color:var(--text-1);border-radius:12px 4px 12px 12px;}
+.voice-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;font-size:22px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.voice-btn.idle{background:var(--navy-3);border:2px solid var(--border);}
+.voice-btn.listening{background:rgba(255,61,90,.2);border:2px solid var(--red);animation:pulse-glow 1s infinite;}
+.voice-btn.speaking{background:rgba(0,229,255,.15);border:2px solid var(--cyan);animation:pulse-glow 1.5s infinite;}
+.voice-wave{display:none;align-items:center;gap:3px;height:24px;}
+.voice-wave.active{display:flex;}
+.voice-wave span{display:block;width:3px;background:var(--red);border-radius:2px;animation:wave 0.8s infinite ease-in-out;}
+.voice-wave span:nth-child(2){animation-delay:.1s;}
+.voice-wave span:nth-child(3){animation-delay:.2s;}
+.voice-wave span:nth-child(4){animation-delay:.3s;}
+.voice-wave span:nth-child(5){animation-delay:.4s;}
+@keyframes wave{0%,100%{height:6px}50%{height:20px}}
+.tts-indicator{display:none;align-items:center;gap:8px;font-size:12px;color:var(--cyan);padding:8px 14px;background:rgba(0,229,255,.06);border-radius:8px;margin-bottom:8px;}
+.tts-indicator.active{display:flex;}
+.tts-bars{display:flex;gap:2px;align-items:center;}
+.tts-bar{width:3px;background:var(--cyan);border-radius:2px;animation:wave 0.6s infinite ease-in-out;}
+.tts-bar:nth-child(2){animation-delay:.1s;}
+.tts-bar:nth-child(3){animation-delay:.2s;}
+.tts-bar:nth-child(4){animation-delay:.3s;}
+.sym-chip{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--navy-3);color:var(--text-3);font-size:12px;cursor:pointer;transition:all .15s;display:inline-block;margin:3px;}
+.sym-chip:hover{border-color:var(--cyan);color:var(--cyan);}
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Connecting AI Doctor...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('ai_doctor') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🤖 AI Doctor Consultation</div>
+  <div class="topbar-right">
+    <span class="live-badge">Voice + AI Powered</span>
+    <button class="btn btn-outline btn-sm" onclick="toggleTTS()" id="tts-toggle">🔊 Voice On</button>
+  </div>
+</div>
+<div class="page-body">
+
+<div class="g2 anim" style="align-items:start;">
+
+<!-- LEFT PANEL -->
+<div>
+  <!-- DOCTOR PROFILE -->
+  <div class="card mb16" style="text-align:center;background:linear-gradient(135deg,rgba(0,60,200,.15),rgba(0,229,255,.05));border-color:rgba(0,229,255,.2);">
+    <div class="doc-avatar-big">🤖</div>
+    <div style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text-1);">Dr. SafeLife AI</div>
+    <div style="font-size:13px;color:var(--cyan);margin:4px 0;">AI Medical Consultant • Voice Enabled</div>
+    <div style="font-size:12px;color:var(--text-3);">Available 24/7 • Instant Response • Free</div>
+    <div id="voice-status" style="margin-top:12px;font-size:12px;color:var(--text-3);">🎤 Voice ready — click mic to speak</div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-top:14px;">
+      <div style="text-align:center;"><div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text-1);">24/7</div><div style="font-size:11px;color:var(--text-3);">Available</div></div>
+      <div style="text-align:center;"><div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text-1);">Voice</div><div style="font-size:11px;color:var(--text-3);">Assistant</div></div>
+      <div style="text-align:center;"><div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text-1);">Free</div><div style="font-size:11px;color:var(--text-3);">Always</div></div>
+    </div>
+  </div>
+
+  <!-- SPECIALIZATION -->
+  <div class="card mb16">
+    <div class="card-title">🏥 Specialization</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      {% for icon,spec,sid in [
+        ('❤️','Cardiologist','cardio'),('🧠','Neurologist','neuro'),
+        ('🩸','Diabetologist','diabetes'),('🫁','Pulmonologist','pulmo'),
+        ('🦴','Orthopedic','ortho'),('🧴','Dermatologist','derma'),
+        ('🦋','Endocrinologist','endo'),('👶','Pediatrician','pedia'),
+        ('🧓','General Physician','general'),('👩','Gynaecologist','gynae')
+      ] %}
+      <button class="spec-btn" id="spec-{{sid}}" onclick="setSpec('{{sid}}','{{spec}}','{{icon}}')">{{icon}} {{spec}}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- QUICK SYMPTOMS -->
+  <div class="card">
+    <div class="card-title">⚡ Quick Symptoms</div>
+    {% for s in ['Fever','Headache','Chest Pain','Cough','Fatigue','Nausea','Back Pain','Joint Pain','Dizziness','Breathlessness','Stomach Pain','Skin Rash','Hair Loss','Weight Gain','Weight Loss','Insomnia','Anxiety','High BP','Frequent Urination','Blurred Vision'] %}
+    <span class="sym-chip" onclick="addSymptom('{{s}}')">{{s}}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- RIGHT: CHAT -->
+<div class="card">
+  <div class="card-title">💬 Consultation</div>
+
+  <!-- TTS SPEAKING INDICATOR -->
+  <div class="tts-indicator" id="tts-indicator">
+    <div class="tts-bars">
+      <div class="tts-bar" style="height:8px;"></div>
+      <div class="tts-bar" style="height:14px;"></div>
+      <div class="tts-bar" style="height:20px;"></div>
+      <div class="tts-bar" style="height:14px;"></div>
+      <div class="tts-bar" style="height:8px;"></div>
+    </div>
+    <span>Dr. SafeLife is speaking...</span>
+    <button onclick="stopSpeaking()" style="margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">⏹</button>
+  </div>
+
+  <div class="doc-chat-win" id="doc-chat">
+    <div class="doc-msg bot">
+      <div class="doc-av">🤖</div>
+      <div class="doc-bubble">
+        👋 Hello <strong>{{ session.user_name }}</strong>! I'm Dr. SafeLife AI.<br><br>
+        🎤 <strong>I can hear and speak to you!</strong> Click the microphone button to ask your question by voice, or type below.<br><br>
+        Select a specialization on the left, then describe your symptoms. I'll give you medical guidance instantly. 🏥<br><br>
+        <strong style="color:var(--yellow);">⚠️ I provide health information only. Always consult a real doctor for diagnosis.</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK QUESTION CHIPS -->
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+    {% for q in ['What are my symptoms?','Is this serious?','When to see doctor?','What tests needed?','Home remedies?','What should I avoid?','Explain my condition','Prevention tips'] %}
+    <span class="sym-chip" onclick="askDoc('{{q}}')">{{q}}</span>
+    {% endfor %}
+  </div>
+
+  <!-- INPUT ROW -->
+  <div style="display:flex;gap:8px;align-items:center;">
+    <input type="text" id="doc-input"
+      placeholder="Type your symptom or question..."
+      style="flex:1;background:var(--navy-3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text-1);font-size:14px;outline:none;transition:border-color .2s;"
+      onkeydown="if(event.key==='Enter')sendDocMsg()"
+      onfocus="this.style.borderColor='var(--cyan)'" onblur="this.style.borderColor='var(--border)'">
+
+    <!-- VOICE WAVE ANIMATION -->
+    <div class="voice-wave" id="voice-wave">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- MIC BUTTON -->
+    <button class="voice-btn idle" id="mic-btn" onclick="toggleVoice()" title="Click to speak">🎤</button>
+
+    <!-- SEND BUTTON -->
+    <button onclick="sendDocMsg()" style="background:var(--grad-cyan);color:#fff;border:none;padding:12px 18px;border-radius:10px;font-size:16px;cursor:pointer;transition:opacity .2s;" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">➤</button>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:8px;">
+    <p style="color:var(--text-3);font-size:11px;">🎤 Click mic button to speak — Chrome browser recommended</p>
+    <p style="color:var(--text-3);font-size:11px;" id="lang-indicator">Language: English (India)</p>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────
+let currentSpec  = 'general';
+let currentSpecName = 'General Physician';
+let ttsEnabled   = true;
+let isListening  = false;
+let recognition  = null;
+let synth        = window.speechSynthesis;
+
+// ── DOCTOR KNOWLEDGE BASE ────────────────────
+const KB = {
+  fever:       '🌡️ <b>Fever Assessment:</b><br>• Low (37.5–38°C): Rest, fluids, paracetamol 500mg<br>• Moderate (38–39°C): See doctor within 24hrs<br>• High (>39°C): See doctor immediately<br>• <span style="color:var(--red);">Danger: Difficulty breathing, severe headache, rash → Emergency 108</span>',
+  headache:    '🧠 <b>Headache Guide:</b><br>• Tension: Rest, hydration, paracetamol<br>• Migraine signs: Throbbing, nausea, light sensitivity → See neurologist<br>• Sudden thunderclap headache → Emergency!<br>• Daily headaches >15 days/month → Neurologist evaluation needed',
+  chest pain:  '❤️ <b>⚠️ CHEST PAIN WARNING:</b><br>• Sudden severe chest pain → <b style="color:var(--red);">CALL 108 NOW</b><br>• Left side pain to arm/jaw → Cardiac emergency<br>• Pain with breathing → Respiratory cause<br>• Sharp positional pain → Musculoskeletal',
+  cough:       '🫁 <b>Cough Types:</b><br>• Dry cough >3 weeks: Chest X-ray needed<br>• Productive cough with fever: Bacterial infection<br>• Cough with blood → Doctor immediately<br>• Nighttime cough → Asthma or GERD possible',
+  fatigue:     '😴 <b>Fatigue Causes:</b><br>• Check Iron, B12, Vitamin D, TSH blood tests<br>• Sleep 7–9 hours consistently<br>• Anaemia is most common cause in India<br>• Persistent fatigue >2 weeks → Get full blood count done',
+  nausea:      '🤢 <b>Nausea/Vomiting:</b><br>• Drink ORS to prevent dehydration<br>• Eat small frequent bland meals (banana, toast, rice)<br>• If with severe stomach pain → Doctor needed<br>• Vomiting blood → Emergency immediately',
+  back pain:   '🦴 <b>Back Pain Management:</b><br>• 90% of back pain resolves in 6 weeks<br>• Hot compress 15–20 min, 3x/day<br>• Gentle walking helps more than bed rest<br>• Ibuprofen/diclofenac for pain relief<br>• Physiotherapy recommended if >2 weeks',
+  joint pain:  '🦴 <b>Joint Pain Guide:</b><br>• Uric acid test to check for gout<br>• Morning stiffness >1 hour → Rheumatoid arthritis check<br>• Knee pain with clicking → Orthopedic evaluation<br>• Anti-inflammatory diet: turmeric, omega-3, ginger',
+  dizziness:   '💫 <b>Dizziness Causes:</b><br>• Low BP: Drink water, rise slowly from sitting<br>• Vertigo (room spinning): ENT doctor needed<br>• Dizziness with chest pain/fainting → Emergency<br>• Check blood sugar if diabetic',
+  breathlessness: '🫁 <b>Breathlessness:</b><br>• Sudden severe breathlessness → Call 108 immediately<br>• With chest pain → Cardiac emergency<br>• Gradual onset → Asthma or heart failure workup<br>• At night: Could be heart failure or sleep apnea',
+  diabetes:    '🩸 <b>Diabetes Management:</b><br>• Target HbA1c <7% for diabetics<br>• Check blood sugar daily (fasting <126, post-meal <180 mg/dL)<br>• Low GI diet: avoid white rice, sugar, white bread<br>• Exercise 30 min daily lowers blood sugar<br>• Regular HbA1c and kidney function tests every 3 months',
+  high bp:     '🩺 <b>High Blood Pressure:</b><br>• Normal: <120/80 mmHg<br>• Reduce salt, processed food, alcohol<br>• DASH diet: fruits, vegetables, whole grains<br>• Exercise 30 min/day, 5 days/week<br>• Take BP medicine consistently — never skip',
+  anxiety:     '🧠 <b>Anxiety Management:</b><br>• Deep breathing: 4 counts in, 4 hold, 6 out<br>• Regular exercise reduces anxiety by 40%<br>• Limit caffeine and alcohol<br>• Cognitive Behavioral Therapy (CBT) is very effective<br>• Consult psychiatrist if severe/persistent',
+  skin rash:   '🧴 <b>Skin Rash Guide:</b><br>• Allergic rash: Antihistamine tablet (cetirizine)<br>• Spreading red rash with fever → Doctor immediately<br>• Heat rash: Cool the area, loose cotton clothing<br>• Fungal rash: Antifungal cream<br>• Rash on face/eyes → Dermatologist urgently',
+  hair loss:   '💆 <b>Hair Loss Causes:</b><br>• Most common: Iron, B12, Vitamin D, Thyroid issues<br>• Get these tested: Iron, Ferritin, B12, TSH, Vitamin D<br>• Stress-related hair loss usually reverses in 3–6 months<br>• PCOS in women can cause hair loss — hormonal check needed',
+  weight gain: '⚖️ <b>Weight Gain:</b><br>• Check Thyroid (TSH) — hypothyroidism causes weight gain<br>• Insulin resistance: check fasting insulin and glucose<br>• 500 calorie deficit/day = 0.5 kg/week safe loss<br>• Strength training builds muscle and boosts metabolism',
+  weight loss: '⚖️ <b>Unexplained Weight Loss:</b><br>• Unintentional weight loss >5% body weight → See doctor<br>• Could indicate diabetes, thyroid, TB, or other conditions<br>• Get full blood panel: CBC, thyroid, blood sugar, HIV test<br>• Eat calorie-dense healthy foods: nuts, eggs, dairy',
+  insomnia:    '😴 <b>Sleep Improvement:</b><br>• Fixed sleep/wake time every day (even weekends)<br>• No screens 1 hour before bed<br>• Keep bedroom dark, cool (18–20°C), quiet<br>• No caffeine after 2 PM<br>• Melatonin 0.5–1mg can help (short-term only)',
+  frequent urination: '🚱 <b>Frequent Urination:</b><br>• Check blood sugar (diabetes is common cause)<br>• UTI signs: burning, cloudy urine → Antibiotic needed<br>• Drink 2–2.5L water but avoid caffeinated drinks<br>• Prostate issues in men over 45 → Urology check',
+  blurred vision: '👁️ <b>Blurred Vision:</b><br>• Sudden blurred vision → Emergency eye checkup<br>• Gradual: Refractive error (glasses needed)<br>• With diabetes → Diabetic retinopathy check urgently<br>• With headache and high BP → Hypertensive retinopathy',
+  default:     '🤖 <b>Medical Guidance:</b><br><br>Based on your concern, I recommend:<br>• 📋 Monitor symptoms for 24–48 hours<br>• 💊 Avoid self-medication without advice<br>• 🩺 Consult appropriate specialist<br>• 🚨 Emergency signs: chest pain, difficulty breathing, loss of consciousness → Call 108'
+};
+
+const SPEC_INTRO = {
+  cardio:  '❤️ Cardiologist consultation started. Please describe your cardiac symptoms — chest pain, palpitations, breathlessness, or high BP.',
+  neuro:   '🧠 Neurologist consultation started. Please describe your neurological symptoms — headache, dizziness, numbness, or seizures.',
+  diabetes:'🩸 Diabetologist consultation started. Please describe your diabetes-related symptoms or blood sugar concerns.',
+  pulmo:   '🫁 Pulmonologist consultation started. Please describe your respiratory symptoms — cough, breathlessness, or chest issues.',
+  ortho:   '🦴 Orthopedic consultation started. Please describe your bone, joint, or muscle symptoms.',
+  derma:   '🧴 Dermatologist consultation started. Please describe your skin symptoms — rash, acne, hair loss, or nail issues.',
+  endo:    '🦋 Endocrinologist consultation started. Please describe your hormonal symptoms — thyroid, diabetes, or weight issues.',
+  pedia:   '👶 Pediatrician consultation started. Please describe the child\'s symptoms including age and duration.',
+  general: '🩺 General Physician consultation started. Please describe your symptoms in detail.',
+  gynae:   '👩 Gynaecologist consultation started. Please describe your symptoms — menstrual issues, PCOS, or reproductive health concerns.',
+};
+
+// ── VOICE TTS ─────────────────────────────────
+function speak(text) {
+  if (!ttsEnabled) return;
+  synth.cancel();
+  const clean = text.replace(/<[^>]*>/g,'').replace(/•/g,'').replace(/[⚠️🤖❤️🧠🩸🫁🦴🧴🦋👶🩺👩💫😴🌡️🤢🧘]/g,'');
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.lang  = 'en-IN';
+  utt.rate  = 0.9;
+  utt.pitch = 1.0;
+  utt.volume = 1.0;
+  const voices = synth.getVoices();
+  const preferred = voices.find(v => v.lang.includes('en-IN')) || voices.find(v => v.lang.includes('en-GB')) || voices.find(v => v.lang.includes('en'));
+  if (preferred) utt.voice = preferred;
+  utt.onstart = () => { document.getElementById('tts-indicator').classList.add('active'); };
+  utt.onend   = () => { document.getElementById('tts-indicator').classList.remove('active'); };
+  synth.speak(utt);
+}
+
+function stopSpeaking() { synth.cancel(); document.getElementById('tts-indicator').classList.remove('active'); }
+
+function toggleTTS() {
+  ttsEnabled = !ttsEnabled;
+  const btn = document.getElementById('tts-toggle');
+  btn.textContent = ttsEnabled ? '🔊 Voice On' : '🔇 Voice Off';
+  btn.style.color = ttsEnabled ? '' : 'var(--text-3)';
+  if (!ttsEnabled) stopSpeaking();
+}
+
+// ── VOICE STT ─────────────────────────────────
+function toggleVoice() {
+  if (isListening) stopListening();
+  else startListening();
+}
+
+function startListening() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Voice input only works in Google Chrome browser. Please use Chrome.');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('mic-btn').className = 'voice-btn listening';
+    document.getElementById('mic-btn').textContent = '🔴';
+    document.getElementById('voice-wave').classList.add('active');
+    document.getElementById('voice-status').textContent = '🎙️ Listening... speak now';
+    document.getElementById('voice-status').style.color = 'var(--red)';
+    stopSpeaking();
+  };
+  recognition.onresult = e => {
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('doc-input').value = transcript;
+    if (e.results[0].isFinal) {
+      stopListening();
+      setTimeout(sendDocMsg, 300);
+    }
+  };
+  recognition.onerror = () => stopListening();
+  recognition.onend   = () => stopListening();
+  recognition.start();
+}
+
+function stopListening() {
+  isListening = false;
+  recognition?.stop();
+  document.getElementById('mic-btn').className = 'voice-btn idle';
+  document.getElementById('mic-btn').textContent = '🎤';
+  document.getElementById('voice-wave').classList.remove('active');
+  document.getElementById('voice-status').textContent = '🎤 Voice ready — click mic to speak';
+  document.getElementById('voice-status').style.color = '';
+}
+
+// ── CHAT ──────────────────────────────────────
+function setSpec(id, name, icon) {
+  currentSpec = id; currentSpecName = name;
+  document.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('spec-'+id)?.classList.add('active');
+  const msg = SPEC_INTRO[id] || SPEC_INTRO['general'];
+  addMsg(msg, 'bot');
+  speak(msg.replace(/<[^>]*>/g,''));
+}
+
+function addSymptom(s) { document.getElementById('doc-input').value = s; sendDocMsg(); }
+function askDoc(q)     { document.getElementById('doc-input').value = q; sendDocMsg(); }
+
+function addMsg(text, role) {
+  const win = document.getElementById('doc-chat');
+  const div = document.createElement('div');
+  div.className = 'doc-msg ' + role;
+  div.innerHTML = `<div class="doc-av">${role==='bot'?'🤖':'👤'}</div><div class="doc-bubble">${text}</div>`;
+  win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+}
+
+function addTyping() {
+  const win = document.getElementById('doc-chat');
+  const div = document.createElement('div');
+  div.className = 'doc-msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="doc-av">🤖</div><div class="doc-bubble" style="color:var(--text-3);">
+    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:typedot 1.2s infinite;margin:0 2px;"></span>
+    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:typedot 1.2s .2s infinite;margin:0 2px;"></span>
+    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:typedot 1.2s .4s infinite;margin:0 2px;"></span>
+  </div>`;
+  win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+}
+
+function sendDocMsg() {
+  const inp = document.getElementById('doc-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  addMsg(msg, 'user');
+  addTyping();
+  setTimeout(() => {
+    document.getElementById('typing-indicator')?.remove();
+    const reply = getReply(msg.toLowerCase());
+    addMsg(reply, 'bot');
+    speak(reply);
+  }, 900);
+}
+
+function getReply(msg) {
+  for (const [key, resp] of Object.entries(KB)) {
+    if (msg.includes(key)) return resp;
+  }
+  if (msg.includes('hello') || msg.includes('hi'))   return '👋 Hello! I\'m Dr. SafeLife AI. Please describe your symptoms or choose a specialization.';
+  if (msg.includes('thank'))                         return '😊 You\'re welcome! Remember to consult a real doctor for proper diagnosis. Stay healthy!';
+  if (msg.includes('emergency') || msg.includes('serious')) return '🚨 If you have a medical emergency, call <b style="color:var(--red);">108</b> immediately. Do not wait for an online consultation.';
+  if (msg.includes('test') || msg.includes('which test')) return '🧪 Common recommended tests: Complete Blood Count (CBC), Blood Sugar (fasting), Lipid Profile, Thyroid (TSH), Vitamin D, B12. Consult your doctor for specific tests.';
+  return KB.default;
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  synth.getVoices();
+  setTimeout(() => {
+    speak("Hello! I'm Dr. SafeLife AI, your voice-enabled medical assistant. Please select a specialization and describe your symptoms.");
+  }, 2000);
+});
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Genetic Risk – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css">
+<style>
+.risk-meter{height:12px;border-radius:6px;background:var(--navy-3);overflow:hidden;margin:8px 0;}
+.risk-fill{height:100%;border-radius:6px;transition:width 1.2s ease;}
+.gene-card{background:var(--navy-3);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;}
+.gene-card:hover{border-color:var(--border-2);}
+.q-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;margin:4px;transition:all .15s;font-size:13px;color:var(--text-2);background:var(--navy-3);}
+.q-chip.yes{border-color:var(--red);color:var(--red);background:rgba(255,61,90,.07);}
+.q-chip.no{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.07);}
+</style></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Analyzing Genetic Risk...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('genetic_risk') }}
+<div class="main"><div class="topbar"><div class="topbar-title">🧬 Genetic Risk Analyzer</div><div class="topbar-right"><span class="live-badge">AI Powered</span></div></div>
+<div class="page-body">
+
+<div class="card mb24 anim">
+<div class="card-title">🧬 Family History Assessment</div>
+<p style="color:var(--text-3);font-size:13px;margin-bottom:20px;">Answer questions about your family health history. Our AI will calculate your genetic risk for major diseases and give you prevention strategies.</p>
+
+{% set questions = [
+  ('q1','Does anyone in your immediate family (parents/siblings) have heart disease or heart attack before age 60?'),
+  ('q2','Does anyone in your family have Type 2 Diabetes?'),
+  ('q3','Does anyone in your family have High Blood Pressure?'),
+  ('q4','Does anyone in your family have cancer (any type)?'),
+  ('q5','Does anyone in your family have stroke history?'),
+  ('q6','Does anyone in your family have kidney disease?'),
+  ('q7','Does anyone in your family have mental health conditions (depression/anxiety/bipolar)?'),
+  ('q8','Does anyone in your family have thyroid disorders?'),
+  ('q9','Does anyone in your family have obesity (BMI > 30)?'),
+  ('q10','Does anyone in your family have high cholesterol?'),
+] %}
+
+<div id="quiz">
+{% for qid, question in questions %}
+<div style="margin-bottom:18px;padding:16px;background:var(--navy-3);border:1px solid var(--border);border-radius:10px;">
+<p style="font-size:14px;color:var(--text-1);margin-bottom:10px;font-weight:500;">{{ loop.index }}. {{ question }}</p>
+<div>
+<span class="q-chip" id="{{ qid }}-yes" onclick="setAnswer('{{ qid }}','yes')">✓ Yes, in my family</span>
+<span class="q-chip" id="{{ qid }}-no" onclick="setAnswer('{{ qid }}','no')">✗ No family history</span>
+<span class="q-chip" id="{{ qid }}-dk" onclick="setAnswer('{{ qid }}','dk')">? Not sure</span>
+</div>
+</div>{% endfor %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+<div style="background:var(--navy-3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+<label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Your Age</label>
+<input type="number" id="user-age" min="10" max="100" placeholder="e.g. 25" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text-1);font-size:16px;outline:none;margin-top:6px;">
+</div>
+<div style="background:var(--navy-3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+<label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Gender</label>
+<select id="user-gender" style="width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text-1);font-size:14px;outline:none;margin-top:6px;">
+<option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
+</select>
+</div>
+</div>
+<button class="analyze-btn" onclick="analyzeGeneticRisk()">🧬 Analyze My Genetic Risk</button>
+</div>
+
+<div id="genetic-results" style="display:none;margin-top:24px;">
+<div class="card-title">📊 Your Genetic Risk Profile</div>
+<div id="risk-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;"></div>
+<div class="warn-box mt24">⚠️ This is based on family history patterns only — not actual genetic testing. Consult a genetic counselor or doctor for accurate assessment. Genetics is only one factor — lifestyle matters more!</div>
+</div>
+</div>
+
+<!-- PREVENTION GUIDE -->
+<div class="card anim anim-d1">
+<div class="card-title">🛡️ Universal Disease Prevention</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;">
+{% for icon,disease,prevention in [
+  ('❤️','Heart Disease','Exercise 150 min/week. Mediterranean diet. No smoking. Control BP and cholesterol. Manage stress.'),
+  ('🩸','Type 2 Diabetes','Maintain healthy weight. Low-sugar diet. Exercise daily. Regular blood sugar testing after age 40.'),
+  ('🧠','Stroke','Control BP and cholesterol. No smoking. Moderate alcohol. Stay physically active. Manage AFib if present.'),
+  ('🦠','Cancer','No tobacco or alcohol. Healthy weight. Regular screenings. Sun protection. Vaccinations (HPV, Hepatitis B).'),
+  ('🫘','Kidney Disease','Stay hydrated. Control diabetes and BP. Avoid excess NSAIDs. Regular kidney function tests.'),
+  ('🧬','Genetic Conditions','Regular health checkups. Genetic counseling if planning family. Early screening based on family history.'),
+] %}
+<div class="gene-card">
+<div style="font-size:28px;margin-bottom:8px;">{{ icon }}</div>
+<div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:8px;">{{ disease }}</div>
+<p style="font-size:12px;color:var(--text-2);line-height:1.7;">{{ prevention }}</p>
+</div>{% endfor %}
+</div>
+</div>
+
+</div></div></div>
+
+<script>
+const answers = {};
+function setAnswer(qid, val) {
+  answers[qid] = val;
+  ['yes','no','dk'].forEach(v => {
+    const el = document.getElementById(qid+'-'+v);
+    el.className = 'q-chip' + (v===val ? ' '+val : '');
+  });
+}
+
+function analyzeGeneticRisk() {
+  const diseases = [
+    {name:'Heart Disease',icon:'❤️',q:['q1','q3','q10'],base:15},
+    {name:'Type 2 Diabetes',icon:'🩸',q:['q2','q9'],base:10},
+    {name:'High Blood Pressure',icon:'🩺',q:['q3','q1'],base:20},
+    {name:'Cancer Risk',icon:'🦠',q:['q4'],base:12},
+    {name:'Stroke',icon:'🧠',q:['q5','q3','q1'],base:8},
+    {name:'Kidney Disease',icon:'🫘',q:['q6','q2'],base:8},
+    {name:'Mental Health',icon:'🧠',q:['q7'],base:15},
+    {name:'Thyroid Disorder',icon:'🦋',q:['q8'],base:12},
+    {name:'Obesity',icon:'⚖️',q:['q9','q2'],base:18},
+    {name:'High Cholesterol',icon:'🫀',q:['q10','q1'],base:15},
+  ];
+
+  const age = parseInt(document.getElementById('user-age').value) || 30;
+  const ageFactor = age > 50 ? 1.3 : age > 35 ? 1.1 : 1.0;
+
+  const cards = diseases.map(d => {
+    let risk = d.base;
+    d.q.forEach(q => { if(answers[q]==='yes') risk += 20; else if(answers[q]==='dk') risk += 8; });
+    risk = Math.min(95, Math.round(risk * ageFactor));
+    const level = risk >= 60 ? 'High' : risk >= 35 ? 'Medium' : 'Low';
+    const color = risk >= 60 ? 'var(--red)' : risk >= 35 ? 'var(--yellow)' : 'var(--green)';
+    const fillColor = risk >= 60 ? '#ff3d5a' : risk >= 35 ? '#ffd600' : '#00ff88';
+    return `<div class="gene-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="font-size:28px;">${d.icon}</span>
+        <div><div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text-1);">${d.name}</div>
+        <span class="risk risk-${level}" style="font-size:11px;padding:2px 8px;">${level} Risk</span></div>
+        <div style="margin-left:auto;font-family:var(--font-h);font-size:22px;font-weight:800;color:${color};">${risk}%</div>
+      </div>
+      <div class="risk-meter"><div class="risk-fill" style="width:${risk}%;background:${fillColor};"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('risk-cards').innerHTML = cards;
+  document.getElementById('genetic-results').style.display = 'block';
+  document.getElementById('genetic-results').scrollIntoView({behavior:'smooth'});
+}
+</script>
+<script src="/static/js/main.js"></script></body></html>

@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Dashboard...</div></div>
+<div id="particles"></div>
+<div class="app">
+  {% from 'sidebar.html' import sidebar %}{{ sidebar('dashboard') }}
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" data-t="dashboard">Dashboard</div>
+      <div class="topbar-right">
+        <!-- Language switcher -->
+        <button class="lang-btn active" data-lang="en" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" data-lang="hi" onclick="switchLang('hi')">हि</button>
+        <button class="lang-btn" data-lang="ta" onclick="switchLang('ta')">த</button>
+        <button class="lang-btn" data-lang="te" onclick="switchLang('te')">తె</button>
+        <span class="live-badge">Live</span>
+        <a href="/logout" class="btn btn-outline btn-sm">Logout</a>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- WELCOME -->
+      <div class="card mb24 anim" style="background:linear-gradient(135deg,rgba(0,60,200,.18),rgba(0,229,255,.05));border-color:rgba(0,229,255,.18);">
+        <div class="flex-b">
+          <div>
+            <h1 style="font-family:var(--font-h);font-size:26px;font-weight:800;color:var(--text-1);" data-t="welcome">Welcome back, {{ session.user_name }}! 👋</h1>
+            <p style="color:var(--text-3);margin-top:6px;font-size:14px;">Your health intelligence system is active and monitoring.</p>
+            <div class="streak-chip" style="margin-top:10px;display:inline-flex;">🔥 {{ streak }} Day Streak</div>
+          </div>
+          <a href="/health_form" class="btn btn-primary" style="white-space:nowrap;padding:12px 22px;" data-t="newcheck">+ New Check</a>
+        </div>
+      </div>
+
+      {% if data %}
+      <!-- STATS -->
+      <div class="stats-grid anim anim-d1">
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-val">{{ data.score }}</div>
+          <div class="stat-lbl">Health Score</div>
+          <div class="stat-sub"><span class="risk risk-{{ data.risk }}" style="font-size:11px;padding:3px 10px;">{{ data.risk }} Risk</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚖️</div>
+          <div class="stat-val mono">{{ data.bmi }}</div>
+          <div class="stat-lbl">BMI Index</div>
+          <div class="stat-sub {% if data.bmi<18.5 %}text-orange{% elif data.bmi<=24.9 %}text-green{% elif data.bmi<=29.9 %}text-yellow{% else %}text-red{% endif %}" style="color:{% if data.bmi<18.5 %}var(--orange){% elif data.bmi<=24.9 %}var(--green){% elif data.bmi<=29.9 %}var(--yellow){% else %}var(--red){% endif %};">
+            {% if data.bmi<18.5 %}Underweight{% elif data.bmi<=24.9 %}Normal ✓{% elif data.bmi<=29.9 %}Overweight{% else %}Obese{% endif %}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🧬</div>
+          <div class="stat-val">{{ data.health_age }}</div>
+          <div class="stat-lbl">Health Age</div>
+          <div class="stat-sub" style="color:{% if data.health_age<data.age %}var(--green){% elif data.health_age==data.age %}var(--cyan){% else %}var(--red){% endif %};">
+            Real age: {{ data.age }} | {% if data.health_age<data.age %}{{ data.age-data.health_age }} yrs younger!{% elif data.health_age==data.age %}Same as real age{% else %}{{ data.health_age-data.age }} yrs older{% endif %}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">😴</div>
+          <div class="stat-val">{{ data.sleep }}h</div>
+          <div class="stat-lbl">Sleep</div>
+          <div class="stat-sub" style="color:{% if data.sleep>=7 %}var(--green){% else %}var(--red){% endif %};">{% if data.sleep>=7 %}Good ✓{% else %}Insufficient{% endif %}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💧</div>
+          <div class="stat-val">{{ data.water }}L</div>
+          <div class="stat-lbl">Water Intake</div>
+          <div class="stat-sub" style="color:{% if data.water>=2.5 %}var(--green){% elif data.water>=2 %}var(--yellow){% else %}var(--red){% endif %};">{% if data.water>=2.5 %}Excellent{% elif data.water>=2 %}Adequate{% else %}Low{% endif %}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🚶</div>
+          <div class="stat-val">{{ "{:,}".format(data.steps) }}</div>
+          <div class="stat-lbl">Daily Steps</div>
+          <div class="stat-sub" style="color:{% if data.steps>=10000 %}var(--green){% elif data.steps>=7000 %}var(--yellow){% else %}var(--red){% endif %};">{% if data.steps>=10000 %}Goal met ✓{% elif data.steps>=7000 %}Almost there{% else %}Low activity{% endif %}</div>
+        </div>
+      </div>
+
+      <!-- CHART + SCORE -->
+      <div class="g2 mb24 anim anim-d2">
+        <div class="card">
+          <div class="card-title">📈 Health Score Trend</div>
+          <div class="chart-wrap">
+            <canvas id="score-chart"
+              data-labels='{{ history|map(attribute="created_at")|list|tojson }}'
+              data-scores='{{ history|map(attribute="score")|list|tojson }}'></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 BMI History</div>
+          <div class="chart-wrap">
+            <canvas id="bmi-chart"
+              data-labels='{{ history|map(attribute="created_at")|list|tojson }}'
+              data-bmis='{{ history|map(attribute="bmi")|list|tojson }}'></canvas>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <div class="card mb24 anim">
+        <div class="empty"><div class="empty-icon">📋</div><p style="font-size:16px;color:var(--text-1);margin-bottom:8px;">No health data yet</p><p>Complete your first health check to see analytics</p><a href="/health_form" class="btn btn-primary" style="display:inline-flex;margin-top:16px;width:auto;padding:12px 28px;">Start Health Check</a></div>
+      </div>
+      {% endif %}
+
+      <!-- TODAY'S MEDICINES -->
+      {% if meds %}
+      <div class="card mb24 anim anim-d3">
+        <div class="flex-b mb16"><div class="card-title" style="margin-bottom:0;">💊 Today's Medicines</div><a href="/medicine" class="btn btn-outline btn-sm">Manage</a></div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          {% for m in meds[:4] %}
+          <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;">
+            <span style="color:var(--text-1);font-weight:600;">{{ m.name }}</span>
+            <span style="color:var(--text-3);margin-left:6px;">{{ m.dosage }}</span>
+            <span style="color:var(--cyan);margin-left:6px;">⏰ {{ m.time }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- QUICK NAV -->
+      <div class="card-title mb16 anim anim-d4">🧭 Quick Access</div>
+      <div class="nav-cards anim anim-d4">
+        <a href="/health_form" class="nav-card"><div class="nav-icon">📋</div><div class="nav-label">Health Check</div><div class="nav-sub">Analyze vitals</div></a>
+        <a href="/symptom"     class="nav-card"><div class="nav-icon">🔍</div><div class="nav-label">Symptoms</div><div class="nav-sub">Check diagnosis</div></a>
+        <a href="/meal"        class="nav-card"><div class="nav-icon">🥗</div><div class="nav-label">Meal Plan</div><div class="nav-sub">Personalized diet</div></a>
+        <a href="/sleep"       class="nav-card"><div class="nav-icon">😴</div><div class="nav-label">Sleep</div><div class="nav-sub">Quality analysis</div></a>
+        <a href="/medicine"    class="nav-card"><div class="nav-icon">💊</div><div class="nav-label">Medicines</div><div class="nav-sub">Set reminders</div></a>
+        <a href="/tracker"     class="nav-card"><div class="nav-icon">💧</div><div class="nav-label">Tracker</div><div class="nav-sub">Daily log</div></a>
+        <a href="/assistant"   class="nav-card"><div class="nav-icon">🤖</div><div class="nav-label">AI Chat</div><div class="nav-sub">Ask questions</div></a>
+        <a href="/doctors"     class="nav-card"><div class="nav-icon">🩺</div><div class="nav-label">Doctors</div><div class="nav-sub">Find specialists</div></a>
+        <a href="/reports"     class="nav-card"><div class="nav-icon">📊</div><div class="nav-label">Reports</div><div class="nav-sub">View history</div></a>
+        <a href="/download_report" class="nav-card"><div class="nav-icon">📄</div><div class="nav-label">PDF Report</div><div class="nav-sub">Download</div></a>
+        <a href="/emergency"   class="nav-card" style="border-color:rgba(255,61,90,.2);"><div class="nav-icon">🚨</div><div class="nav-label" style="color:#ff8099;">Emergency</div><div class="nav-sub">108 Ambulance</div></a>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Doctors – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Doctors...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('doctors') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🩺 Healthcare Directory</div>
+  <div class="topbar-right"><a href="/emergency" class="btn btn-danger btn-sm">🚨 Emergency</a></div>
+</div>
+<div class="page-body">
+
+<div class="card mb24 anim">
+<div class="card-title">🏥 Choose Specialization</div>
+<div class="spec-grid">
+<div class="spec-card sel" data-spec="cardio" onclick="filterDocs('cardio')"><div class="spec-icon">❤️</div><div class="spec-name">Cardiologist</div></div>
+<div class="spec-card" data-spec="neuro" onclick="filterDocs('neuro')"><div class="spec-icon">🧠</div><div class="spec-name">Neurologist</div></div>
+<div class="spec-card" data-spec="nephro" onclick="filterDocs('nephro')"><div class="spec-icon">🫘</div><div class="spec-name">Nephrologist</div></div>
+<div class="spec-card" data-spec="ortho" onclick="filterDocs('ortho')"><div class="spec-icon">🦴</div><div class="spec-name">Orthopedic</div></div>
+<div class="spec-card" data-spec="ophthal" onclick="filterDocs('ophthal')"><div class="spec-icon">👁️</div><div class="spec-name">Ophthalmologist</div></div>
+<div class="spec-card" data-spec="gastro" onclick="filterDocs('gastro')"><div class="spec-icon">🫁</div><div class="spec-name">Gastroenterologist</div></div>
+<div class="spec-card" data-spec="dermato" onclick="filterDocs('dermato')"><div class="spec-icon">🧴</div><div class="spec-name">Dermatologist</div></div>
+<div class="spec-card" data-spec="endo" onclick="filterDocs('endo')"><div class="spec-icon">🩸</div><div class="spec-name">Endocrinologist</div></div>
+</div>
+</div>
+
+<div class="card mb24 anim anim-d1">
+<div class="card-title">👨‍⚕️ Available Specialists</div>
+<div class="doc-grid">
+
+<div class="doc-card" data-spec="cardio">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👨‍⚕️</div><div><div class="doc-name">Dr. Rajesh Kumar</div><div class="doc-exp">15 yrs • Cardiologist</div></div></div>
+<div class="doc-info"><div>🏥 Apollo Hospital, Bangalore</div><div>📍 Bannerghatta Road – 560076</div><div>📞 <a href="tel:+918040206789" style="color:var(--cyan);">+91 80-4020-6789</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Apollo+Hospital+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="cardio">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👩‍⚕️</div><div><div class="doc-name">Dr. Anita Sharma</div><div class="doc-exp">12 yrs • Interventional Cardiologist</div></div></div>
+<div class="doc-info"><div>🏥 Fortis Hospital, Bangalore</div><div>📍 Cunningham Road – 560052</div><div>📞 <a href="tel:+918066214444" style="color:var(--cyan);">+91 80-6621-4444</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Fortis+Hospital+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="neuro" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👨‍⚕️</div><div><div class="doc-name">Dr. Suresh Menon</div><div class="doc-exp">18 yrs • Neurologist</div></div></div>
+<div class="doc-info"><div>🏥 Narayana Health, Bangalore</div><div>📍 Hosur Road – 560099</div><div>📞 <a href="tel:+918071222222" style="color:var(--cyan);">+91 80-7122-2222</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Narayana+Health+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="neuro" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👩‍⚕️</div><div><div class="doc-name">Dr. Priya Nair</div><div class="doc-exp">10 yrs • Consultant Neurologist</div></div></div>
+<div class="doc-info"><div>🏥 Manipal Hospital, Bangalore</div><div>📍 Old Airport Road – 560017</div><div>📞 <a href="tel:+918025024444" style="color:var(--cyan);">+91 80-2502-4444</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Manipal+Hospital+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="nephro" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👨‍⚕️</div><div><div class="doc-name">Dr. Arjun Patel</div><div class="doc-exp">14 yrs • Nephrologist</div></div></div>
+<div class="doc-info"><div>🏥 BGS Gleneagles Hospital</div><div>📍 Kengeri, Bangalore – 560060</div><div>📞 <a href="tel:+918028612021" style="color:var(--cyan);">+91 80-2861-2021</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=BGS+Gleneagles+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="ortho" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👨‍⚕️</div><div><div class="doc-name">Dr. Vikram Singh</div><div class="doc-exp">16 yrs • Orthopedic Surgeon</div></div></div>
+<div class="doc-info"><div>🏥 Sakra World Hospital</div><div>📍 Devarabisanahalli – 560103</div><div>📞 <a href="tel:+918049694969" style="color:var(--cyan);">+91 80-4969-4969</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Sakra+World+Hospital+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="ophthal" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👩‍⚕️</div><div><div class="doc-name">Dr. Kavitha Reddy</div><div class="doc-exp">11 yrs • Ophthalmologist</div></div></div>
+<div class="doc-info"><div>🏥 Sankara Eye Hospital</div><div>📍 Varthur Road – 560037</div><div>📞 <a href="tel:+918040454545" style="color:var(--cyan);">+91 80-4045-4545</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Sankara+Eye+Hospital+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="gastro" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👨‍⚕️</div><div><div class="doc-name">Dr. Mohan Das</div><div class="doc-exp">13 yrs • Gastroenterologist</div></div></div>
+<div class="doc-info"><div>🏥 Columbia Asia Hospital</div><div>📍 Hebbal, Bangalore – 560024</div><div>📞 <a href="tel:+918039898989" style="color:var(--cyan);">+91 80-3989-8989</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Columbia+Asia+Hebbal+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="dermato" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👩‍⚕️</div><div><div class="doc-name">Dr. Sneha Rao</div><div class="doc-exp">9 yrs • Dermatologist</div></div></div>
+<div class="doc-info"><div>🏥 Koshys Hospital</div><div>📍 St. Johns Road – 560005</div><div>📞 <a href="tel:+918022265710" style="color:var(--cyan);">+91 80-2226-5710</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Koshys+Hospital+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+<div class="doc-card" data-spec="endo" style="display:none;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div class="doc-av">👨‍⚕️</div><div><div class="doc-name">Dr. Ravi Shankar</div><div class="doc-exp">14 yrs • Endocrinologist</div></div></div>
+<div class="doc-info"><div>🏥 Manipal Hospital Whitefield</div><div>📍 Whitefield – 560066</div><div>📞 <a href="tel:+918022221111" style="color:var(--cyan);">+91 80-2222-1111</a></div></div>
+<div style="margin-top:10px;"><a href="https://maps.google.com/?q=Manipal+Whitefield+Bangalore" target="_blank" class="btn btn-outline btn-sm">🗺️ Map</a></div>
+</div>
+
+</div>
+</div>
+
+<div class="card mb24 anim anim-d2">
+<div class="card-title">🏨 Top Hospitals – Bangalore</div>
+<div class="hosp-grid">
+<div class="hosp-card"><div style="font-size:28px;">🏥</div><div><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);">Apollo Hospital</div><div style="font-size:12px;color:var(--text-3);">Bannerghatta Road</div><div style="font-size:12px;color:var(--cyan);">📞 1860-500-1066</div><a href="https://maps.google.com/?q=Apollo+Hospital+Bangalore" target="_blank" style="font-size:11px;color:var(--text-3);">🗺️ Map →</a></div></div>
+<div class="hosp-card"><div style="font-size:28px;">🏥</div><div><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);">Fortis Hospital</div><div style="font-size:12px;color:var(--text-3);">Cunningham Road</div><div style="font-size:12px;color:var(--cyan);">📞 1800-103-8500</div><a href="https://maps.google.com/?q=Fortis+Hospital+Bangalore" target="_blank" style="font-size:11px;color:var(--text-3);">🗺️ Map →</a></div></div>
+<div class="hosp-card"><div style="font-size:28px;">🏥</div><div><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);">Narayana Health</div><div style="font-size:12px;color:var(--text-3);">Bommasandra</div><div style="font-size:12px;color:var(--cyan);">📞 1800-309-4433</div><a href="https://maps.google.com/?q=Narayana+Health+Bangalore" target="_blank" style="font-size:11px;color:var(--text-3);">🗺️ Map →</a></div></div>
+<div class="hosp-card"><div style="font-size:28px;">🏥</div><div><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);">Manipal Hospital</div><div style="font-size:12px;color:var(--text-3);">Old Airport Road</div><div style="font-size:12px;color:var(--cyan);">📞 080-2502-4444</div><a href="https://maps.google.com/?q=Manipal+Hospital+Bangalore" target="_blank" style="font-size:11px;color:var(--text-3);">🗺️ Map →</a></div></div>
+</div>
+</div>
+
+<div class="card anim anim-d3">
+<div class="card-title">🥗 Condition-Based Diet and Supplements</div>
+<div class="cond-tabs">
+<span class="ctab active" data-cond="heart" onclick="showCond('heart')">❤️ Heart</span>
+<span class="ctab" data-cond="diabetes" onclick="showCond('diabetes')">🩸 Diabetes</span>
+<span class="ctab" data-cond="kidney" onclick="showCond('kidney')">🫘 Kidney</span>
+<span class="ctab" data-cond="bone" onclick="showCond('bone')">🦴 Bone</span>
+<span class="ctab" data-cond="eye" onclick="showCond('eye')">👁️ Eye</span>
+<span class="ctab" data-cond="skin" onclick="showCond('skin')">🧴 Skin</span>
+</div>
+<div id="c-heart">
+<div class="food-grid">
+<div class="food-card"><div class="food-icon">🍌</div><div class="food-name">Banana</div><div class="food-note">Potassium-rich</div></div>
+<div class="food-card"><div class="food-icon">🥬</div><div class="food-name">Spinach</div><div class="food-note">Folate and Mg</div></div>
+<div class="food-card"><div class="food-icon">🥑</div><div class="food-name">Avocado</div><div class="food-note">Healthy fats</div></div>
+<div class="food-card"><div class="food-icon">🫐</div><div class="food-name">Blueberries</div><div class="food-note">Antioxidants</div></div>
+<div class="food-card"><div class="food-icon">🐟</div><div class="food-name">Salmon</div><div class="food-note">Omega-3</div></div>
+<div class="food-card"><div class="food-icon">🌰</div><div class="food-name">Walnuts</div><div class="food-note">Good cholesterol</div></div>
+</div>
+<div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;"><span class="chip" style="cursor:default;">Omega-3</span><span class="chip" style="cursor:default;">Vitamin B Complex</span><span class="chip" style="cursor:default;">CoQ10</span></div>
+<div class="warn-box">⚠️ Consult your cardiologist before taking any supplements.</div>
+</div>
+<div id="c-diabetes" style="display:none;">
+<div class="food-grid">
+<div class="food-card"><div class="food-icon">🥦</div><div class="food-name">Broccoli</div><div class="food-note">Low GI</div></div>
+<div class="food-card"><div class="food-icon">🫐</div><div class="food-name">Berries</div><div class="food-note">Low sugar</div></div>
+<div class="food-card"><div class="food-icon">🫘</div><div class="food-name">Lentils</div><div class="food-note">Complex carbs</div></div>
+<div class="food-card"><div class="food-icon">🥚</div><div class="food-name">Eggs</div><div class="food-note">Low-carb protein</div></div>
+<div class="food-card"><div class="food-icon">🌿</div><div class="food-name">Fenugreek</div><div class="food-note">Regulates glucose</div></div>
+<div class="food-card"><div class="food-icon">🥜</div><div class="food-name">Almonds</div><div class="food-note">Blood sugar control</div></div>
+</div>
+<div class="warn-box">⚠️ Consult your endocrinologist before taking supplements.</div>
+</div>
+<div id="c-kidney" style="display:none;">
+<div class="food-grid">
+<div class="food-card"><div class="food-icon">🍎</div><div class="food-name">Apple</div><div class="food-note">Low potassium</div></div>
+<div class="food-card"><div class="food-icon">🫐</div><div class="food-name">Blueberries</div><div class="food-note">Antioxidants</div></div>
+<div class="food-card"><div class="food-icon">🥚</div><div class="food-name">Egg Whites</div><div class="food-note">Pure protein</div></div>
+<div class="food-card"><div class="food-icon">🐟</div><div class="food-name">Fish</div><div class="food-note">Low phosphorus</div></div>
+<div class="food-card"><div class="food-icon">🧅</div><div class="food-name">Onion</div><div class="food-note">Low potassium</div></div>
+<div class="food-card"><div class="food-icon">🥦</div><div class="food-name">Cauliflower</div><div class="food-note">Kidney friendly</div></div>
+</div>
+<div class="warn-box">⚠️ Kidney patients must follow strict diet. Always consult your nephrologist.</div>
+</div>
+<div id="c-bone" style="display:none;">
+<div class="food-grid">
+<div class="food-card"><div class="food-icon">🥛</div><div class="food-name">Milk</div><div class="food-note">High Calcium</div></div>
+<div class="food-card"><div class="food-icon">🧀</div><div class="food-name">Cheese</div><div class="food-note">Calcium dairy</div></div>
+<div class="food-card"><div class="food-icon">🥬</div><div class="food-name">Kale</div><div class="food-note">Plant calcium</div></div>
+<div class="food-card"><div class="food-icon">🐟</div><div class="food-name">Sardines</div><div class="food-note">Ca and Vit D</div></div>
+<div class="food-card"><div class="food-icon">🌻</div><div class="food-name">Sesame</div><div class="food-note">Bone minerals</div></div>
+<div class="food-card"><div class="food-icon">🍊</div><div class="food-name">Orange</div><div class="food-note">Vitamin C</div></div>
+</div>
+<div class="warn-box">⚠️ Consult your orthopedic before taking bone supplements.</div>
+</div>
+<div id="c-eye" style="display:none;">
+<div class="food-grid">
+<div class="food-card"><div class="food-icon">🥕</div><div class="food-name">Carrot</div><div class="food-note">Beta-carotene</div></div>
+<div class="food-card"><div class="food-icon">🥬</div><div class="food-name">Spinach</div><div class="food-note">Lutein</div></div>
+<div class="food-card"><div class="food-icon">🐟</div><div class="food-name">Tuna</div><div class="food-note">Omega-3</div></div>
+<div class="food-card"><div class="food-icon">🥚</div><div class="food-name">Eggs</div><div class="food-note">Zinc and Vit E</div></div>
+<div class="food-card"><div class="food-icon">🍊</div><div class="food-name">Citrus</div><div class="food-note">Vitamin C</div></div>
+<div class="food-card"><div class="food-icon">🫐</div><div class="food-name">Bilberry</div><div class="food-note">Night vision</div></div>
+</div>
+<div class="warn-box">⚠️ For eye conditions always get a professional diagnosis.</div>
+</div>
+<div id="c-skin" style="display:none;">
+<div class="food-grid">
+<div class="food-card"><div class="food-icon">🍅</div><div class="food-name">Tomato</div><div class="food-note">Lycopene</div></div>
+<div class="food-card"><div class="food-icon">🥑</div><div class="food-name">Avocado</div><div class="food-note">Vit E and fats</div></div>
+<div class="food-card"><div class="food-icon">🐟</div><div class="food-name">Salmon</div><div class="food-note">Omega-3</div></div>
+<div class="food-card"><div class="food-icon">🌰</div><div class="food-name">Walnuts</div><div class="food-note">Zinc</div></div>
+<div class="food-card"><div class="food-icon">🍊</div><div class="food-name">Orange</div><div class="food-note">Vitamin C</div></div>
+<div class="food-card"><div class="food-icon">🥬</div><div class="food-name">Spinach</div><div class="food-note">Iron and folate</div></div>
+</div>
+<div class="warn-box">⚠️ For skin conditions always consult a dermatologist.</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

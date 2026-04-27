@@ -1,0 +1,43 @@
+
+{% macro sidebar(active='') %}
+<aside class="sidebar">
+  <div class="sb-brand"><div class="sb-icon">🫀</div><div><h2>SAFELIFE AI</h2><span>Intelligence System</span></div></div>
+  <nav class="sb-nav">
+    <div class="sb-section"><div class="sb-label">Main</div>
+      <a href="/dashboard"       class="nav-link {% if active=='dashboard' %}active{% endif %}"><span class="ni">🏠</span> Dashboard</a>
+      <a href="/health_form"     class="nav-link {% if active=='health' %}active{% endif %}"><span class="ni">📋</span> Health Check</a>
+      <a href="/symptom"         class="nav-link {% if active=='symptom' %}active{% endif %}"><span class="ni">🔍</span> Symptom Checker</a>
+      <a href="/reports"         class="nav-link {% if active=='reports' %}active{% endif %}"><span class="ni">📊</span> Reports</a>
+    </div>
+    <div class="sb-section"><div class="sb-label">Health Tools</div>
+      <a href="/meal"            class="nav-link {% if active=='meal' %}active{% endif %}"><span class="ni">🥗</span> Meal Planner</a>
+      <a href="/sleep"           class="nav-link {% if active=='sleep' %}active{% endif %}"><span class="ni">😴</span> Sleep Analyzer</a>
+      <a href="/medicine"        class="nav-link {% if active=='medicine' %}active{% endif %}"><span class="ni">💊</span> Medicine Reminder</a>
+      <a href="/tracker"         class="nav-link {% if active=='tracker' %}active{% endif %}"><span class="ni">💧</span> Daily Tracker</a>
+      <a href="/breathing"       class="nav-link {% if active=='breathing' %}active{% endif %}"><span class="ni">🧘</span> Breathing</a>
+      <a href="/circadian"       class="nav-link {% if active=='circadian' %}active{% endif %}"><span class="ni">🌙</span> Body Clock</a>
+    </div>
+    <div class="sb-section"><div class="sb-label">AI Features</div>
+      <a href="/ai_doctor"       class="nav-link {% if active=='ai_doctor' %}active{% endif %}"><span class="ni">🤖</span> AI Doctor</a>
+      <a href="/report_analyzer" class="nav-link {% if active=='report_analyzer' %}active{% endif %}"><span class="ni">📑</span> Report Analyzer</a>
+      <a href="/bodytype"        class="nav-link {% if active=='bodytype' %}active{% endif %}"><span class="ni">🧬</span> Body Type AI</a>
+      <a href="/genetic_risk"    class="nav-link {% if active=='genetic_risk' %}active{% endif %}"><span class="ni">🔬</span> Genetic Risk</a>
+      <a href="/women_health"    class="nav-link {% if active=='women_health' %}active{% endif %}"><span class="ni">💖</span> Women Health</a>
+      <a href="/gamification"    class="nav-link {% if active=='gamification' %}active{% endif %}"><span class="ni">🎮</span> Achievements</a>
+      <a href="/challenge"       class="nav-link {% if active=='challenge' %}active{% endif %}"><span class="ni">📅</span> 7-Day Challenge</a>
+    </div>
+    <div class="sb-section"><div class="sb-label">Services</div>
+      <a href="/assistant"       class="nav-link {% if active=='assistant' %}active{% endif %}"><span class="ni">💬</span> AI Assistant</a>
+      <a href="/doctors"         class="nav-link {% if active=='doctors' %}active{% endif %}"><span class="ni">🩺</span> Doctors</a>
+      <a href="/emergency"       class="nav-link {% if active=='emergency' %}active{% endif %}" style="color:#ff8099;"><span class="ni">🚨</span> Emergency</a>
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-chip">
+      <div class="ua">{{ session.user_name[0]|upper }}</div>
+      <div style="flex:1;overflow:hidden;"><div class="un">{{ session.user_name }}</div><div class="ur">Patient</div><div class="streak-chip">🔥 {{ session.get('streak',0) }} day streak</div></div>
+      <a href="/logout" title="Logout" style="color:var(--text-3);font-size:18px;text-decoration:none;">⏏</a>
+    </div>
+  </div>
+</aside>
+{% endmacro %}

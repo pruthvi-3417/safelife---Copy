@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Health Badges – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.badge-card { background:var(--navy-3);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:all 0.2s; }
+.badge-card.earned { border-color:var(--yellow);background:rgba(255,214,0,0.06); }
+.badge-card.locked { opacity:0.4; }
+.badge-icon { font-size:40px;margin-bottom:8px; }
+.badge-name { font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--text-1); }
+.badge-desc { font-size:11px;color:var(--text-3);margin-top:4px; }
+.level-bar { height:14px;border-radius:7px;background:var(--navy-3);overflow:hidden;margin:8px 0; }
+.level-fill { height:100%;border-radius:7px;background:var(--grad-cyan);transition:width 1s ease; }
+.xp-badge { display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);font-size:12px;font-weight:700;color:var(--yellow); }
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Achievements...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('gamification') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🎮 Health Gamification</div>
+  <div class="topbar-right"><span class="xp-badge">⭐ {{ session.get('streak',0) * 10 }} XP</span></div>
+</div>
+<div class="page-body">
+
+{% set streak = session.get('streak', 0) %}
+{% set xp = streak * 10 %}
+{% set level = [xp // 100 + 1, 10]|min %}
+{% set xp_pct = (xp % 100) %}
+
+<!-- LEVEL CARD -->
+<div class="card mb24 anim" style="background:linear-gradient(135deg,rgba(0,60,200,0.2),rgba(0,229,255,0.05));border-color:rgba(0,229,255,0.2);">
+  <div class="flex-b">
+    <div>
+      <div style="font-size:13px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Current Level</div>
+      <div style="font-family:var(--font-h);font-size:52px;font-weight:800;color:var(--cyan);line-height:1;">{{ level }}</div>
+      <div style="font-family:var(--font-h);font-size:16px;color:var(--text-1);">
+        {% if level <= 2 %}Health Beginner{% elif level <= 4 %}Wellness Warrior{% elif level <= 6 %}Fitness Champion{% elif level <= 8 %}Health Master{% else %}Legendary Sage{% endif %}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:13px;color:var(--text-3);">Total XP</div>
+      <div style="font-family:var(--font-h);font-size:32px;font-weight:800;color:var(--yellow);">{{ xp }}</div>
+      <div style="font-size:12px;color:var(--text-3);">🔥 {{ streak }} day streak</div>
+    </div>
+  </div>
+  <div style="margin-top:16px;">
+    <div class="flex-b" style="margin-bottom:6px;"><span style="font-size:12px;color:var(--text-3);">Level {{ level }} → {{ level + 1 }}</span><span style="font-size:12px;color:var(--cyan);">{{ xp_pct }}/100 XP</span></div>
+    <div class="level-bar"><div class="level-fill" style="width:{{ xp_pct }}%;"></div></div>
+  </div>
+</div>
+
+<!-- BADGES -->
+<div class="card mb24 anim anim-d1">
+  <div class="card-title">🏆 Achievement Badges</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;">
+    {% set badges = [
+      ('🌟','First Check','Complete first health check', streak>=0),
+      ('🔥','3 Day Streak','Login 3 days in a row', streak>=3),
+      ('💧','Hydration Hero','Log 2.5L water daily', streak>=5),
+      ('🚶','Step Master','Hit 10,000 steps', streak>=7),
+      ('😴','Sleep Champion','Sleep 8+ hours', streak>=10),
+      ('🥗','Nutrition Star','Follow meal plan', streak>=14),
+      ('🧘','Zen Master','Complete 7 breathing sessions', streak>=21),
+      ('💊','Med Tracker','Add 5 medicines', streak>=3),
+      ('🏥','Doctor Ready','Visit doctors page', True),
+      ('🚨','Safety First','Set emergency contacts', True),
+      ('🤖','AI Explorer','Chat with AI 10 times', streak>=5),
+      ('👑','Health Legend','30 day streak', streak>=30),
+    ] %}
+    {% for icon, name, desc, earned in badges %}
+    <div class="badge-card {% if earned %}earned{% else %}locked{% endif %}">
+      <div class="badge-icon">{{ icon }}</div>
+      <div class="badge-name">{{ name }}</div>
+      <div class="badge-desc">{{ desc }}</div>
+      {% if earned %}<div style="font-size:10px;color:var(--green);margin-top:6px;">✅ Earned</div>{% else %}<div style="font-size:10px;color:var(--text-3);margin-top:6px;">🔒 Locked</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- LEADERBOARD (sample) -->
+<div class="card anim anim-d2">
+  <div class="card-title">🏅 Health Leaderboard</div>
+  <div style="overflow-x:auto;"><table class="data-table">
+    <thead><tr><th>Rank</th><th>Name</th><th>Level</th><th>XP</th><th>Streak</th></tr></thead>
+    <tbody>
+      {% for rank, name, lv, xpv, st in [(1,'You',level,xp,streak),(2,'Priya R.',4,380,18),(3,'Arjun K.',3,290,14),(4,'Sneha M.',3,270,12),(5,'Ravi S.',2,180,8)] %}
+      <tr {% if rank==1 %}style="background:rgba(0,229,255,0.05);"{% endif %}>
+        <td><span style="font-family:var(--font-h);font-weight:700;color:{% if rank==1 %}var(--yellow){% elif rank==2 %}var(--text-1){% else %}var(--text-3){% endif %};">{% if rank==1 %}👑{% elif rank==2 %}🥈{% elif rank==3 %}🥉{% else %}{{ rank }}{% endif %}</span></td>
+        <td style="color:{% if rank==1 %}var(--cyan){% else %}var(--text-1){% endif %};font-weight:{% if rank==1 %}600{% else %}400{% endif %};">{{ name }}</td>
+        <td><span class="risk risk-Low" style="font-size:11px;padding:2px 8px;">Lv {{ lv }}</span></td>
+        <td class="mono" style="color:var(--yellow);">{{ xpv }} XP</td>
+        <td style="color:var(--orange);">🔥 {{ st }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+
+</div>
+</div>
+</div>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

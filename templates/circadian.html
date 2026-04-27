@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Circadian Rhythm – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.time-block { padding:14px 16px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:14px;transition:all 0.2s; }
+.time-block:hover { border-color:var(--border-2);transform:translateX(4px); }
+.time-dot { width:14px;height:14px;border-radius:50%;flex-shrink:0; }
+.time-label { font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);min-width:90px; }
+.time-desc { font-size:13px;color:var(--text-2); }
+.clock-wrap { position:relative;width:220px;height:220px;margin:0 auto 20px; }
+.sun-arc { fill:none;stroke:rgba(255,214,0,0.3);stroke-width:12;stroke-linecap:round; }
+.moon-arc { fill:none;stroke:rgba(0,100,255,0.25);stroke-width:12;stroke-linecap:round; }
+.current-marker { transition:transform 1s ease; }
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Circadian Tracker...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('circadian') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🌙 Circadian Rhythm Tracker</div>
+  <div class="topbar-right"><span id="current-time-badge" class="live-badge">Live</span></div>
+</div>
+<div class="page-body">
+
+<div class="g2 anim" style="align-items:start;">
+<!-- CLOCK VISUAL -->
+<div class="card" style="text-align:center;">
+  <div class="card-title" style="justify-content:center;">⏰ Your Body Clock</div>
+  <div class="clock-wrap">
+    <svg width="220" height="220" viewBox="0 0 220 220">
+      <!-- Background circle -->
+      <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="20"/>
+      <!-- Sun arc (6am to 10pm) -->
+      <path class="sun-arc" d="M 110 10 A 100 100 0 0 1 110 210" />
+      <!-- Moon arc -->
+      <path class="moon-arc" d="M 110 210 A 100 100 0 0 1 110 10" />
+      <!-- Hour markers -->
+      <g id="hour-marks"></g>
+      <!-- Current time marker -->
+      <g id="time-marker">
+        <circle r="10" fill="var(--cyan)" opacity="0.9"/>
+        <circle r="6" fill="white"/>
+      </g>
+      <!-- Center -->
+      <circle cx="110" cy="110" r="30" fill="var(--card-bg)" stroke="var(--border)" stroke-width="1"/>
+      <text x="110" y="106" text-anchor="middle" fill="var(--text-1)" style="font-family:var(--font-h);font-size:11px;font-weight:700;" id="clock-hour">--</text>
+      <text x="110" y="120" text-anchor="middle" fill="var(--text-3)" style="font-size:9px;" id="clock-ampm">--</text>
+    </svg>
+  </div>
+  <div id="current-phase" style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:4px;">Loading...</div>
+  <div id="phase-tip" style="font-size:13px;color:var(--text-3);max-width:280px;margin:0 auto;">Your body is syncing to natural rhythms.</div>
+
+  <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <div style="text-align:center;padding:12px 16px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+      <div style="font-size:18px;">🌅</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Best wake time</div>
+      <div style="font-family:var(--font-m);font-size:14px;color:var(--text-1);font-weight:700;">6:00 AM</div>
+    </div>
+    <div style="text-align:center;padding:12px 16px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+      <div style="font-size:18px;">🧠</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Peak focus</div>
+      <div style="font-family:var(--font-m);font-size:14px;color:var(--text-1);font-weight:700;">10 AM–2 PM</div>
+    </div>
+    <div style="text-align:center;padding:12px 16px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+      <div style="font-size:18px;">🌙</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Best sleep</div>
+      <div style="font-family:var(--font-m);font-size:14px;color:var(--text-1);font-weight:700;">10:30 PM</div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="card">
+  <div class="card-title">📋 Your Daily Rhythm Schedule</div>
+  {% for time, dot, label, desc in [
+    ('5:30 – 7:00 AM','#ffd600','Wake Up Window','Cortisol peaks. Best time to wake up naturally. Light exposure resets your internal clock.'),
+    ('7:00 – 9:00 AM','#ff8c42','Morning Routine','Testosterone and alertness peak. Ideal for exercise, cold shower, healthy breakfast.'),
+    ('9:00 – 11:00 AM','#00ff88','Deep Work Zone','Cognitive performance at peak. Best for complex thinking, studying, problem-solving.'),
+    ('11 AM – 1:00 PM','#00e5ff','High Energy','Short-term memory peak. Great for meetings, presentations, creative work.'),
+    ('1:00 – 3:00 PM','#4a6a8a','Afternoon Dip','Natural energy dip. Light meal, short walk, or 20-min nap if needed.'),
+    ('3:00 – 6:00 PM','#00ff88','Second Wind','Body temperature peaks. Best for physical exercise, strength training.'),
+    ('6:00 – 8:00 PM','#ffd600','Wind Down','Coordination and reaction time peak. Light dinner, social time, light activity.'),
+    ('8:00 – 10:00 PM','#ff8c42','Pre-Sleep','Melatonin rises. Dim lights, avoid screens, relaxing activities only.'),
+    ('10 PM – 5:30 AM','#0070ff','Deep Sleep','Core restoration time. Cell repair, memory consolidation, hormone release.'),
+  ] %}
+  <div class="time-block">
+    <div class="time-dot" style="background:{{ dot }};box-shadow:0 0 8px {{ dot }}44;"></div>
+    <div class="time-label">{{ time }}</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-1);">{{ label }}</div>
+      <div class="time-desc">{{ desc }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+</div>
+
+<!-- PERSONALIZATION -->
+<div class="card mt24 anim anim-d1">
+  <div class="card-title">🎯 Optimize Your Rhythm</div>
+  <div class="g3" style="gap:14px;">
+    {% for icon,title,tips in [
+      ('☀️','Morning Habits',['Get sunlight within 30 min of waking','Drink water before coffee','Exercise in morning for better sleep','Eat breakfast within 1 hour of waking']),
+      ('🌤️','Afternoon Habits',['Avoid caffeine after 2 PM','Short 10-min walk after lunch','Schedule creative tasks for 3-5 PM','Stay hydrated throughout day']),
+      ('🌙','Evening Habits',['Dim lights after 8 PM','No screens 1 hour before bed','Keep bedroom cool (18-20°C)','Same bedtime every day']),
+    ] %}
+    <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:10px;padding:16px;">
+      <div style="font-size:24px;margin-bottom:10px;">{{ icon }}</div>
+      <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:10px;">{{ title }}</div>
+      {% for tip in tips %}
+      <div style="font-size:12px;color:var(--text-2);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">✓ {{ tip }}</div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const totalMins = h * 60 + m;
+  const angle = (totalMins / 1440) * 360 - 90;
+  const r = 100, cx = 110, cy = 110;
+  const rad = angle * Math.PI / 180;
+  const x = cx + r * Math.cos(rad);
+  const y = cy + r * Math.sin(rad);
+  const marker = document.getElementById('time-marker');
+  if (marker) { marker.setAttribute('transform', `translate(${x},${y})`); }
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  document.getElementById('clock-hour').textContent = `${h12}:${m.toString().padStart(2,'0')}`;
+  document.getElementById('clock-ampm').textContent = ampm;
+  let phase, tip;
+  if (h >= 5 && h < 7) { phase = '🌅 Wake Up Window'; tip = 'Get sunlight now! It resets your circadian clock.'; }
+  else if (h >= 7 && h < 9) { phase = '🏃 Morning Energy'; tip = 'Great time for exercise and a nutritious breakfast.'; }
+  else if (h >= 9 && h < 11) { phase = '🧠 Deep Work Zone'; tip = 'Peak cognitive performance! Tackle your hardest tasks now.'; }
+  else if (h >= 11 && h < 13) { phase = '💡 High Focus'; tip = 'Short-term memory is peaking. Great for meetings and learning.'; }
+  else if (h >= 13 && h < 15) { phase = '😴 Afternoon Dip'; tip = 'Energy dip is normal. A 20-min nap can restore alertness.'; }
+  else if (h >= 15 && h < 18) { phase = '💪 Second Wind'; tip = 'Body temperature peaks! Perfect for physical exercise.'; }
+  else if (h >= 18 && h < 20) { phase = '🌆 Wind Down'; tip = 'Light dinner, social time, gentle movement.'; }
+  else if (h >= 20 && h < 22) { phase = '🌙 Pre-Sleep'; tip = 'Melatonin is rising. Dim lights and avoid screens.'; }
+  else { phase = '⭐ Sleep Time'; tip = 'Your body is in deep restoration mode. Stay asleep!'; }
+  document.getElementById('current-phase').textContent = phase;
+  document.getElementById('phase-tip').textContent = tip;
+}
+updateClock();
+setInterval(updateClock, 60000);
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

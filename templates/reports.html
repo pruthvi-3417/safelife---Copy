@@ -1,0 +1,30 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Reports – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Reports...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('reports') }}
+<div class="main"><div class="topbar"><div class="topbar-title">📊 Health Reports</div><div class="topbar-right"><a href="/download_report" class="btn btn-primary btn-sm">📄 Download PDF</a><a href="/health_form" class="btn btn-outline btn-sm">+ New Check</a></div></div>
+<div class="page-body">
+{% if history %}
+<div class="stats-grid mb24 anim">
+<div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val">{{ history|length }}</div><div class="stat-lbl">Total Checks</div></div>
+<div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-val">{{ history|map(attribute='score')|list|max }}</div><div class="stat-lbl">Best Score</div></div>
+<div class="stat-card"><div class="stat-icon">📉</div><div class="stat-val">{{ (history|map(attribute='score')|list|sum/history|length)|round|int }}</div><div class="stat-lbl">Avg Score</div></div>
+<div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-val mono">{{ history[0].score }}</div><div class="stat-lbl">Latest Score</div><div class="stat-sub"><span class="risk risk-{{ history[0].risk }}" style="font-size:11px;padding:3px 8px;">{{ history[0].risk }}</span></div></div>
+</div>
+<div class="g2 mb24 anim anim-d1">
+<div class="card"><div class="card-title">📈 Health Score Trend</div><div class="chart-wrap"><canvas id="score-chart" data-labels='{{ history|reverse|list|map(attribute="created_at")|list|tojson }}' data-scores='{{ history|reverse|list|map(attribute="score")|list|tojson }}'></canvas></div></div>
+<div class="card"><div class="card-title">⚖️ BMI History</div><div class="chart-wrap"><canvas id="bmi-chart" data-labels='{{ history|reverse|list|map(attribute="created_at")|list|tojson }}' data-bmis='{{ history|reverse|list|map(attribute="bmi")|list|tojson }}'></canvas></div></div>
+</div>
+<div class="card anim anim-d2"><div class="card-title">🗂️ History Log</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>#</th><th>Date</th><th>Score</th><th>Risk</th><th>BMI</th><th>Health Age</th><th>Sleep</th><th>Water</th><th>Steps</th><th>Stress</th></tr></thead>
+<tbody>{% for r in history %}<tr>
+<td style="color:var(--text-3);">{{ loop.index }}</td><td>{{ r.created_at }}</td>
+<td><span class="mono" style="font-weight:700;color:{% if r.score>=75 %}var(--green){% elif r.score>=50 %}var(--yellow){% else %}var(--red){% endif %};">{{ r.score }}</span></td>
+<td><span class="risk risk-{{ r.risk }}" style="font-size:11px;padding:2px 8px;">{{ r.risk }}</span></td>
+<td class="mono">{{ r.bmi }}</td><td class="mono">{{ r.health_age }} yrs</td>
+<td>{{ r.sleep }}h</td><td>{{ r.water }}L</td><td>{{ "{:,}".format(r.steps) }}</td>
+<td style="color:{% if r.stress=='Low' %}var(--green){% elif r.stress=='Medium' %}var(--yellow){% else %}var(--red){% endif %};">{{ r.stress }}</td>
+</tr>{% endfor %}</tbody></table></div></div>
+{% else %}<div class="card anim"><div class="empty"><div class="empty-icon">📊</div><p style="color:var(--text-1);font-size:16px;margin-bottom:8px;">No reports yet</p><p>Complete a health check to generate your first report.</p><a href="/health_form" class="btn btn-primary" style="display:inline-flex;margin-top:16px;width:auto;padding:12px 28px;">Start Health Check</a></div></div>{% endif %}
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>
+

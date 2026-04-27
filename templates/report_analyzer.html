@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Report Analyzer – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<style>
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:52px 24px;text-align:center;cursor:pointer;transition:all .3s;background:var(--navy-3);position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--cyan);background:rgba(0,229,255,.05);box-shadow:0 0 30px rgba(0,229,255,.1);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.scan-progress{display:none;margin-top:20px;}
+.scan-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:10px 0;}
+.scan-fill{height:100%;background:var(--grad-cyan);border-radius:4px;width:0%;transition:width .3s ease;}
+.param-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--navy-3);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:all .2s;}
+.param-row:hover{border-color:var(--border-2);}
+.pname{font-size:13px;font-weight:600;color:var(--text-1);min-width:160px;}
+.prange{font-size:11px;color:var(--text-3);}
+.pinput{background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text-1);font-size:14px;font-family:var(--font-m);outline:none;width:110px;text-align:center;transition:border-color .2s;}
+.pinput:focus{border-color:var(--cyan);}
+.pstatus{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;min-width:60px;text-align:center;}
+.s-normal{color:var(--green);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.2);}
+.s-high{color:var(--red);background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.2);}
+.s-low{color:var(--yellow);background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.2);}
+.ocr-preview{max-width:100%;border-radius:10px;margin-top:10px;display:none;}
+.tab-btn{padding:8px 20px;border-radius:8px;border:1px solid var(--border);background:var(--navy-3);color:var(--text-3);cursor:pointer;font-size:13px;transition:all .15s;}
+.tab-btn.active{background:rgba(0,229,255,.1);border-color:var(--cyan);color:var(--cyan);}
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Report Analyzer...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('report_analyzer') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">📑 AI Report Analyzer</div>
+  <div class="topbar-right"><span class="live-badge">AI + OCR Powered</span></div>
+</div>
+<div class="page-body">
+
+<!-- TABS -->
+<div class="card mb24 anim">
+  <div class="card-title">📋 Choose Input Method</div>
+  <div style="display:flex;gap:10px;margin-bottom:20px;">
+    <button class="tab-btn active" id="tab-upload" onclick="switchTab('upload')">📸 Upload Report (AI Scan)</button>
+    <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✏️ Enter Values Manually</button>
+  </div>
+
+  <!-- UPLOAD TAB -->
+  <div id="section-upload">
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="report-file" accept="image/*,.pdf" onchange="handleFile(event)">
+      <div style="font-size:48px;margin-bottom:12px;">📄</div>
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:8px;">Upload Your Lab Report</div>
+      <p style="color:var(--text-3);font-size:13px;">Supports JPG, PNG, PDF — Take a photo of your report</p>
+      <p style="color:var(--cyan);font-size:12px;margin-top:8px;">🤖 AI will automatically read and extract all values</p>
+    </div>
+
+    <img id="preview-img" class="ocr-preview" src="" alt="Report Preview">
+
+    <div class="scan-progress" id="scan-progress">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:blink 1s infinite;"></div>
+        <span style="font-size:13px;color:var(--cyan);" id="scan-status">Initializing AI scanner...</span>
+      </div>
+      <div class="scan-bar"><div class="scan-fill" id="scan-fill"></div></div>
+      <div style="font-size:11px;color:var(--text-3);" id="scan-pct">0%</div>
+    </div>
+
+    <div id="ocr-extracted" style="display:none;margin-top:16px;">
+      <div style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px;">✅ Report Scanned Successfully!</div>
+        <div style="font-size:12px;color:var(--text-2);" id="ocr-summary">Values extracted from report.</div>
+      </div>
+      <div style="font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:10px;">📊 Extracted Values — Review and Edit:</div>
+      <div id="extracted-params"></div>
+      <button class="analyze-btn" onclick="analyzeExtracted()" style="margin-top:16px;">🔬 Analyze Extracted Values</button>
+    </div>
+  </div>
+
+  <!-- MANUAL TAB -->
+  <div id="section-manual" style="display:none;">
+    <p style="color:var(--text-3);font-size:13px;margin-bottom:16px;">Enter values from your blood test report manually. Leave empty if not available.</p>
+    <div id="manual-params"></div>
+    <button class="analyze-btn" onclick="analyzeManual()" style="margin-top:16px;">🔬 Analyze My Report</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results-section" style="display:none;">
+  <div class="card mb24 anim">
+    <div class="card-title">📊 Analysis Results</div>
+    <div id="summary-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+    <div id="result-rows"></div>
+  </div>
+  <div class="card mb24 anim anim-d1">
+    <div class="card-title">🤖 AI Health Insights</div>
+    <div id="ai-insights"></div>
+    <div class="warn-box mt16">⚠️ This AI analysis is for informational purposes only. Always consult a qualified doctor to interpret lab reports and for medical advice and treatment.</div>
+  </div>
+  <div class="card anim anim-d2">
+    <div class="card-title">📈 Parameter Visual</div>
+    <canvas id="report-chart" style="max-height:300px;"></canvas>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const PARAMS = [
+  {id:'hb',       name:'Hemoglobin',        unit:'g/dL',     min:12,   max:17,   keywords:['hemoglobin','hb','haemoglobin']},
+  {id:'wbc',      name:'WBC Count',         unit:'cells/μL', min:4000, max:11000,keywords:['wbc','white blood','leukocyte']},
+  {id:'platelets',name:'Platelets',         unit:'L/μL',     min:1.5,  max:4.0,  keywords:['platelet','thrombocyte']},
+  {id:'glucose',  name:'Fasting Glucose',   unit:'mg/dL',    min:70,   max:100,  keywords:['glucose','fasting','blood sugar','fbs']},
+  {id:'hba1c',    name:'HbA1c',             unit:'%',        min:4,    max:5.6,  keywords:['hba1c','glycated','a1c']},
+  {id:'cholesterol',name:'Total Cholesterol',unit:'mg/dL',   min:0,    max:200,  keywords:['cholesterol','total chol']},
+  {id:'ldl',      name:'LDL Cholesterol',   unit:'mg/dL',    min:0,    max:100,  keywords:['ldl','low density']},
+  {id:'hdl',      name:'HDL Cholesterol',   unit:'mg/dL',    min:60,   max:200,  keywords:['hdl','high density']},
+  {id:'triglycerides',name:'Triglycerides', unit:'mg/dL',    min:0,    max:150,  keywords:['triglyceride','tg','trigs']},
+  {id:'creatinine',name:'Creatinine',       unit:'mg/dL',    min:0.6,  max:1.2,  keywords:['creatinine','creat']},
+  {id:'urea',     name:'Blood Urea',        unit:'mg/dL',    min:7,    max:20,   keywords:['urea','blood urea','bun']},
+  {id:'sodium',   name:'Sodium',            unit:'mEq/L',    min:136,  max:145,  keywords:['sodium','na+','na ']},
+  {id:'potassium',name:'Potassium',         unit:'mEq/L',    min:3.5,  max:5.0,  keywords:['potassium','k+','k ']},
+  {id:'tsh',      name:'TSH (Thyroid)',     unit:'μIU/mL',   min:0.4,  max:4.0,  keywords:['tsh','thyroid stimulating']},
+  {id:'vitd',     name:'Vitamin D',         unit:'ng/mL',    min:30,   max:100,  keywords:['vitamin d','vit d','25-oh','25oh']},
+  {id:'vitb12',   name:'Vitamin B12',       unit:'pg/mL',    min:200,  max:900,  keywords:['vitamin b12','vit b12','cobalamin','b12']},
+  {id:'ferritin', name:'Ferritin',          unit:'ng/mL',    min:12,   max:300,  keywords:['ferritin']},
+  {id:'uricacid', name:'Uric Acid',         unit:'mg/dL',    min:2.4,  max:7.0,  keywords:['uric acid','urate']},
+];
+
+const INSIGHTS = {
+  hb_low:'🩸 <b>Low Hemoglobin (Anemia):</b> Eat iron-rich foods — spinach, dates, pomegranate, red meat. Take Iron + Vitamin C supplement. Avoid tea/coffee with meals. Recheck in 3 months.',
+  hb_high:'🩸 <b>High Hemoglobin:</b> Stay well hydrated. Could indicate dehydration or polycythemia — consult doctor.',
+  glucose_high:'🩸 <b>High Blood Sugar:</b> Reduce refined carbs and sugar. Exercise 30 min daily. Fasting glucose 100–125 = Pre-diabetes. Above 126 = Diabetes — see endocrinologist.',
+  hba1c_high:'🩸 <b>High HbA1c:</b> Long-term elevated blood sugar. HbA1c above 6.5% = Diabetes. Strict diet needed. Consult diabetologist immediately.',
+  cholesterol_high:'🫀 <b>High Total Cholesterol:</b> Avoid fried and processed foods. Eat oats, nuts, fish. Exercise daily. Statin therapy may be needed — see cardiologist.',
+  ldl_high:'🫀 <b>High LDL (Bad Cholesterol):</b> Reduce saturated fats. Add more fibre. Consider statin therapy — consult cardiologist urgently.',
+  hdl_low:'🫀 <b>Low HDL (Good Cholesterol):</b> Increase aerobic exercise. Eat olive oil, avocado, nuts. Quit smoking. HDL above 60 is protective.',
+  triglycerides_high:'🫀 <b>High Triglycerides:</b> Avoid alcohol and sugar completely. Exercise regularly. Low-carb diet. Omega-3 supplements recommended.',
+  tsh_high:'🦋 <b>High TSH = Hypothyroidism:</b> Thyroid is underactive. Symptoms: fatigue, weight gain, cold intolerance, hair loss. Consult endocrinologist — thyroxine medication likely needed.',
+  tsh_low:'🦋 <b>Low TSH = Hyperthyroidism:</b> Thyroid is overactive. Symptoms: weight loss, palpitations, anxiety, sweating. Consult endocrinologist urgently.',
+  vitd_low:'☀️ <b>Low Vitamin D:</b> Get 20 min morning sunlight daily. Take Vitamin D3 + K2 supplement (2000 IU). Eat eggs and fatty fish. Recheck in 3 months.',
+  vitb12_low:'💊 <b>Low Vitamin B12:</b> Take Methylcobalamin B12 supplement. Eat eggs, dairy, meat. Vegetarians are at high risk. Severe deficiency causes nerve damage.',
+  creatinine_high:'🫘 <b>High Creatinine:</b> Kidney function may be impaired. Stay hydrated (2.5L water daily). Avoid NSAIDs like ibuprofen. See nephrologist immediately.',
+  ferritin_low:'🩸 <b>Low Ferritin (Iron stores):</b> Iron deficiency before anemia sets in. Take iron supplements with Vitamin C. Eat iron-rich foods. Recheck in 8 weeks.',
+  uricacid_high:'🦴 <b>High Uric Acid (Gout risk):</b> Avoid red meat, shellfish, alcohol, sugary drinks. Drink plenty of water. See rheumatologist if joints are painful.',
+};
+
+// ── BUILD MANUAL FORM ────────────────────────
+function buildManualForm() {
+  document.getElementById('manual-params').innerHTML = PARAMS.map(p => `
+    <div class="param-row">
+      <div><div class="pname">${p.name}</div><div class="prange">Normal: ${p.min}–${p.max} ${p.unit}</div></div>
+      <input type="number" class="pinput" id="m-${p.id}" placeholder="Enter value" step="0.01">
+      <span class="pstatus" id="ms-${p.id}" style="opacity:0;">—</span>
+    </div>`).join('');
+  PARAMS.forEach(p => {
+    document.getElementById('m-'+p.id)?.addEventListener('input', e => {
+      const v = parseFloat(e.target.value); const s = document.getElementById('ms-'+p.id);
+      if (isNaN(v)) { s.style.opacity=0; return; }
+      s.style.opacity=1;
+      if (v < p.min) { s.textContent='LOW'; s.className='pstatus s-low'; }
+      else if (v > p.max) { s.textContent='HIGH'; s.className='pstatus s-high'; }
+      else { s.textContent='OK'; s.className='pstatus s-normal'; }
+    });
+  });
+}
+buildManualForm();
+
+// ── TAB SWITCH ───────────────────────────────
+function switchTab(tab) {
+  document.getElementById('section-upload').style.display = tab==='upload' ? '' : 'none';
+  document.getElementById('section-manual').style.display = tab==='manual' ? '' : 'none';
+  document.getElementById('tab-upload').className = 'tab-btn' + (tab==='upload'?' active':'');
+  document.getElementById('tab-manual').className = 'tab-btn' + (tab==='manual'?' active':'');
+}
+
+// ── FILE UPLOAD + OCR ────────────────────────
+async function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const img = document.getElementById('preview-img');
+    img.src = e.target.result; img.style.display = 'block';
+    document.getElementById('scan-progress').style.display = 'block';
+    document.getElementById('upload-zone').style.borderColor = 'var(--cyan)';
+    try {
+      const result = await Tesseract.recognize(e.target.result, 'eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            const pct = Math.round(m.progress * 100);
+            document.getElementById('scan-fill').style.width = pct + '%';
+            document.getElementById('scan-pct').textContent = pct + '%';
+            document.getElementById('scan-status').textContent = pct < 30 ? '🔍 Scanning report...' : pct < 60 ? '🧠 Reading values...' : pct < 90 ? '⚡ Extracting parameters...' : '✅ Almost done...';
+          }
+        }
+      });
+      const text = result.data.text;
+      processOCRText(text);
+    } catch(err) {
+      document.getElementById('scan-status').textContent = '⚠️ Scan failed. Please enter values manually.';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function processOCRText(text) {
+  const lines = text.split('\n').map(l => l.toLowerCase());
+  const extracted = {};
+  PARAMS.forEach(p => {
+    for (const line of lines) {
+      const hasKeyword = p.keywords.some(k => line.includes(k));
+      if (hasKeyword) {
+        const nums = line.match(/\d+\.?\d*/g);
+        if (nums && nums.length > 0) {
+          const val = parseFloat(nums[nums.length - 1]);
+          if (!isNaN(val) && val > 0) { extracted[p.id] = val; break; }
+        }
+      }
+    }
+  });
+
+  const count = Object.keys(extracted).length;
+  document.getElementById('ocr-summary').textContent = `${count} parameter${count!==1?'s':''} detected from your report. Review and correct if needed.`;
+
+  document.getElementById('extracted-params').innerHTML = PARAMS.map(p => `
+    <div class="param-row">
+      <div><div class="pname">${p.name}</div><div class="prange">Normal: ${p.min}–${p.max} ${p.unit}</div></div>
+      <input type="number" class="pinput" id="e-${p.id}" value="${extracted[p.id]||''}" placeholder="Not found" step="0.01">
+      <span class="pstatus ${extracted[p.id] ? (extracted[p.id]<p.min?'s-low':extracted[p.id]>p.max?'s-high':'s-normal') : ''}" id="es-${p.id}">
+        ${extracted[p.id] ? (extracted[p.id]<p.min?'LOW':extracted[p.id]>p.max?'HIGH':'OK') : '—'}
+      </span>
+    </div>`).join('');
+
+  document.getElementById('ocr-extracted').style.display = 'block';
+  document.getElementById('scan-progress').style.display = 'none';
+}
+
+// ── ANALYZE ──────────────────────────────────
+function analyzeExtracted() {
+  const vals = {};
+  PARAMS.forEach(p => {
+    const v = parseFloat(document.getElementById('e-'+p.id)?.value);
+    if (!isNaN(v)) vals[p.id] = v;
+  });
+  runAnalysis(vals);
+}
+
+function analyzeManual() {
+  const vals = {};
+  PARAMS.forEach(p => {
+    const v = parseFloat(document.getElementById('m-'+p.id)?.value);
+    if (!isNaN(v)) vals[p.id] = v;
+  });
+  if (!Object.keys(vals).length) { alert('Please enter at least one value!'); return; }
+  runAnalysis(vals);
+}
+
+function runAnalysis(vals) {
+  let normal=0, high=0, low=0;
+  const results = [], insights = new Set(), chartLabels=[], chartVals=[], chartColors=[];
+
+  PARAMS.forEach(p => {
+    const v = vals[p.id];
+    if (v === undefined) return;
+    let status, cls;
+    if (v < p.min)      { status='LOW';    cls='s-low';    low++;    if(INSIGHTS[p.id+'_low'])   insights.add(INSIGHTS[p.id+'_low']); }
+    else if (v > p.max) { status='HIGH';   cls='s-high';   high++;   if(INSIGHTS[p.id+'_high'])  insights.add(INSIGHTS[p.id+'_high']); }
+    else                { status='NORMAL'; cls='s-normal'; normal++; }
+    results.push({...p, v, status, cls});
+    const pct = Math.min(100, Math.round(((v - p.min) / (p.max - p.min)) * 100));
+    chartLabels.push(p.name);
+    chartVals.push(pct < 0 ? 0 : pct > 100 ? 120 : pct);
+    chartColors.push(status==='NORMAL'?'rgba(0,255,136,.6)':status==='HIGH'?'rgba(255,61,90,.6)':'rgba(255,214,0,.6)');
+  });
+
+  // Summary
+  document.getElementById('summary-row').innerHTML = `
+    <div style="background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--green);">${normal}</div><div style="font-size:11px;color:var(--text-3);">Normal ✓</div></div>
+    <div style="background:rgba(255,61,90,.07);border:1px solid rgba(255,61,90,.2);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--red);">${high}</div><div style="font-size:11px;color:var(--text-3);">High ↑</div></div>
+    <div style="background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--yellow);">${low}</div><div style="font-size:11px;color:var(--text-3);">Low ↓</div></div>
+    <div style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--cyan);">${results.length}</div><div style="font-size:11px;color:var(--text-3);">Total</div></div>
+    <div style="background:${high>0||low>0?'rgba(255,61,90,.07)':'rgba(0,255,136,.07)'};border:1px solid ${high>0||low>0?'rgba(255,61,90,.2)':'rgba(0,255,136,.2)'};border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-family:var(--font-h);font-size:16px;font-weight:800;color:${high>0||low>0?'var(--red)':'var(--green)'};">${high+low===0?'ALL OK':high+low+' FLAGS'}</div><div style="font-size:11px;color:var(--text-3);">Overall</div></div>`;
+
+  // Rows
+  document.getElementById('result-rows').innerHTML = results.map(r => `
+    <div class="param-row">
+      <div style="flex:1;"><div class="pname">${r.name}</div><div class="prange">Normal: ${r.min}–${r.max} ${r.unit}</div></div>
+      <span style="font-family:var(--font-m);font-size:15px;font-weight:700;color:${r.status==='NORMAL'?'var(--green)':r.status==='HIGH'?'var(--red)':'var(--yellow)'};">${r.v} ${r.unit}</span>
+      <span class="pstatus ${r.cls}" style="margin-left:10px;">${r.status}</span>
+    </div>`).join('');
+
+  // Insights
+  document.getElementById('ai-insights').innerHTML = insights.size > 0
+    ? [...insights].map(i=>`<div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;font-size:13px;color:var(--text-2);line-height:1.6;">${i}</div>`).join('')
+    : `<div style="color:var(--green);padding:14px;background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.15);border-radius:8px;">✅ All entered values are within normal range! Your health markers look good. Keep maintaining your healthy lifestyle.</div>`;
+
+  // Chart
+  const canvas = document.getElementById('report-chart');
+  if (window._reportChart) window._reportChart.destroy();
+  window._reportChart = new Chart(canvas, {
+    type:'bar',
+    data:{ labels:chartLabels, datasets:[{label:'Value % of Normal Range', data:chartVals, backgroundColor:chartColors, borderRadius:6 }] },
+    options:{ responsive:true, plugins:{ legend:{labels:{color:'#8ab0cc'}} }, scales:{ x:{ticks:{color:'#3a5a7a',maxRotation:45}}, y:{min:0,max:130,ticks:{color:'#3a5a7a',callback:v=>v>100?'HIGH':v+'%'}} } }
+  });
+
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth'});
+}
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

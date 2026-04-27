@@ -1,0 +1,78 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Results – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Analyzing Results...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('health') }}
+<div class="main"><div class="topbar"><div class="topbar-title">🔬 Analysis Results</div><div class="topbar-right"><a href="/health_form" class="btn btn-outline btn-sm">New Check</a><a href="/download_report" class="btn btn-primary btn-sm">📄 Download PDF</a></div></div>
+<div class="page-body">
+<!-- TOP 3 CARDS -->
+<div class="g3 mb24 anim">
+<div class="card" style="text-align:center;">
+<div class="card-title" style="justify-content:center;">🎯 Health Score</div>
+<div class="ring-wrap"><div class="ring"><svg viewBox="0 0 140 140" width="150" height="150"><circle class="ring-track" cx="70" cy="70" r="60"/><circle class="ring-fill" cx="70" cy="70" r="60" data-score="{{ score }}" style="stroke-dasharray:377;stroke-dashoffset:377;"/></svg><div class="ring-text"><span class="ring-num">{{ score }}</span><span class="ring-lbl">/ 100</span></div></div></div>
+</div>
+<div class="card" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+<div class="card-title" style="justify-content:center;">🛡️ Risk Level</div>
+<div style="font-size:64px;margin:8px 0;">{{ '✅' if risk=='Low' else '⚠️' if risk=='Medium' else '🔴' }}</div>
+<div class="risk risk-{{ risk }}" style="font-size:16px;padding:8px 22px;">{{ risk }} Risk</div>
+<p style="color:var(--text-3);font-size:12px;margin-top:10px;">{% if risk=='Low' %}Great! Maintain your habits.{% elif risk=='Medium' %}Some improvements needed.{% else %}Immediate lifestyle changes required.{% endif %}</p>
+</div>
+<div class="card" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+<div class="card-title" style="justify-content:center;">🧬 Health Age</div>
+<div style="font-family:var(--font-h);font-size:52px;font-weight:800;line-height:1;margin:8px 0;color:{% if health_age<age %}var(--green){% elif health_age==age %}var(--cyan){% else %}var(--red){% endif %};">{{ health_age }}</div>
+<p style="color:var(--text-3);font-size:13px;">Your real age: <strong style="color:var(--text-1);">{{ age }}</strong></p>
+<p style="color:{% if health_age<age %}var(--green){% elif health_age==age %}var(--cyan){% else %}var(--red){% endif %};font-size:13px;margin-top:6px;">{% if health_age<age %}🎉 {{ age-health_age }} years biologically younger!{% elif health_age==age %}Equal to real age{% else %}⚠️ {{ health_age-age }} years older biologically{% endif %}</p>
+</div>
+</div>
+<!-- VITALS + BMI -->
+<div class="g2 mb24 anim anim-d1">
+<div class="card"><div class="card-title">📊 Vitals Summary</div>
+{% for label,val,unit,icon in [('Age',age,'yrs','🧑'),('Height',height,'cm','📏'),('Weight',weight,'kg','⚖️'),('Sleep',sleep,'hrs','😴'),('Water',water,'L','💧'),('Stress',stress,'','🧠')] %}
+<div class="flex-b" style="padding:10px 14px;background:var(--navy-3);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+<span style="color:var(--text-3);font-size:13px;">{{ icon }} {{ label }}</span>
+<span class="mono" style="color:var(--text-1);font-size:14px;font-weight:500;">{{ val }}{% if unit %} {{ unit }}{% endif %}</span>
+</div>{% endfor %}
+<div class="flex-b" style="padding:10px 14px;background:var(--navy-3);border:1px solid var(--border);border-radius:8px;">
+<span style="color:var(--text-3);font-size:13px;">⚖️ BMI</span>
+<span class="mono" style="color:{% if bmi<18.5 %}var(--orange){% elif bmi<=24.9 %}var(--green){% elif bmi<=29.9 %}var(--yellow){% else %}var(--red){% endif %};font-size:14px;font-weight:700;">{{ bmi }} — {% if bmi<18.5 %}Underweight{% elif bmi<=24.9 %}Normal ✓{% elif bmi<=29.9 %}Overweight{% else %}Obese{% endif %}</span>
+</div>
+</div>
+<!-- ALERTS + SUGGESTIONS -->
+<div class="card"><div class="card-title">⚠️ Alerts & Suggestions</div>
+{% if alerts %}{% for a in alerts %}<div class="alert-item">⚠️ {{ a }}</div>{% endfor %}{% else %}<div style="color:var(--green);padding:12px;background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.15);border-radius:8px;">✅ No critical alerts! You're doing great.</div>{% endif %}
+<div class="divider"></div>
+{% if suggestions %}{% for s in suggestions %}<div class="sugg-item">💡 {{ s }}</div>{% endfor %}{% endif %}
+</div>
+</div>
+<!-- WHAT-IF SIMULATOR -->
+<div class="card anim anim-d2">
+<div class="card-title">🔮 What-If Health Simulator</div>
+<p style="color:var(--text-3);font-size:13px;margin-bottom:20px;">Drag the sliders to simulate how lifestyle changes would affect your health score in real-time.</p>
+<div class="sim-grid">
+<div>
+<div class="sim-row"><label>😴 Sleep</label><input type="range" id="sleep" class="sim-input" min="1" max="12" step="0.5" value="{{ sleep }}" data-unit="h"><span class="sim-val" id="v-sleep">{{ sleep }}h</span></div>
+<div class="sim-row"><label>💧 Water</label><input type="range" id="water" class="sim-input" min="0.5" max="6" step="0.5" value="{{ water }}" data-unit="L"><span class="sim-val" id="v-water">{{ water }}L</span></div>
+<div class="sim-row"><label>🚶 Steps</label><input type="range" id="steps" class="sim-input" min="0" max="20000" step="500" value="{{ steps }}" data-unit=""><span class="sim-val" id="v-steps">{{ steps }}</span></div>
+<div class="sim-row"><label>⚖️ Weight</label><input type="range" id="weight" class="sim-input" min="40" max="150" step="1" value="{{ weight }}" data-unit="kg"><span class="sim-val" id="v-weight">{{ weight }}kg</span></div>
+<input type="hidden" id="age" class="sim-input" value="{{ age }}">
+<input type="hidden" id="height" class="sim-input" value="{{ height }}">
+<div class="sim-row"><label>🧠 Stress</label>
+<select id="sim-stress" style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text-1);font-size:13px;">
+<option value="Low" {% if stress=='Low' %}selected{% endif %}>Low</option>
+<option value="Medium" {% if stress=='Medium' %}selected{% endif %}>Medium</option>
+<option value="High" {% if stress=='High' %}selected{% endif %}>High</option>
+</select></div>
+</div>
+<div class="sim-result">
+<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;">Predicted Score</div>
+<div class="sim-score" id="sim-score" data-prev="{{ score }}">{{ score }}</div>
+<div id="sim-risk" class="risk risk-{{ risk }}" style="display:inline-flex;margin-bottom:8px;">{{ risk }} Risk</div>
+<div style="font-size:12px;color:var(--text-3);">Health Age: <span id="sim-hage" style="color:var(--cyan);">{{ health_age }} yrs</span></div>
+<svg viewBox="0 0 140 140" width="110" height="110" style="margin-top:12px;transform:rotate(-90deg)">
+<circle class="ring-track" cx="70" cy="70" r="60"/>
+<circle id="sim-ring" class="ring-fill" cx="70" cy="70" r="60" style="stroke-dasharray:377;stroke-dashoffset:100;stroke:#00e5ff;"/>
+</svg>
+</div>
+</div>
+</div>
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>

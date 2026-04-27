@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Emergency – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Emergency Mode...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('emergency') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🚨 Emergency Response</div>
+  <div class="topbar-right">
+    <span class="live-badge" style="background:rgba(255,61,90,.08);border-color:rgba(255,61,90,.2);color:#ff8099;">Emergency Mode</span>
+  </div>
+</div>
+<div class="page-body">
+
+<!-- SOS HERO -->
+<div class="sos-hero mb24 anim">
+  <div style="position:relative;z-index:1;">
+    <div style="font-size:13px;color:#ff9999;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;">🚑 NATIONAL AMBULANCE HELPLINE</div>
+    <div class="sos-number">108</div>
+    <p style="color:#ffaaaa;font-size:14px;margin-bottom:24px;">Available 24×7 across India — Free Emergency Service</p>
+    <button class="amb-btn" onclick="callAmb()">🚑 CALL AMBULANCE – 108</button>
+  </div>
+</div>
+
+<div class="g2 mb24 anim anim-d1">
+<!-- HELPLINES -->
+<div class="card">
+  <div class="card-title">📞 Emergency Helplines – India</div>
+  <table class="em-table">
+    <thead><tr><th>Service</th><th>Number</th><th>Hours</th></tr></thead>
+    <tbody>
+      {% for svc,num,hrs in [
+        ('🚑 Ambulance','108','24×7'),
+        ('🚔 Police','100','24×7'),
+        ('🔥 Fire Brigade','101','24×7'),
+        ('🏥 Medical Helpline','104','24×7'),
+        ('🆘 Disaster Relief','1078','24×7'),
+        ('🧠 iCall Mental Health','9152987821','Mon–Sat'),
+        ('👩 Women Helpline','1091','24×7'),
+        ('👴 Senior Citizen','14567','24×7'),
+        ('☠️ Poison Control','1800-11-6117','24×7'),
+      ] %}
+      <tr>
+        <td>{{ svc }}</td>
+        <td><a href="tel:{{ num }}" style="color:var(--cyan);font-family:var(--font-m);font-weight:700;">{{ num }}</a></td>
+        <td style="color:var(--green);">{{ hrs }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- MY CONTACTS -->
+<div class="card">
+  <div class="card-title">👥 My Emergency Contacts</div>
+  <div id="contacts-list" style="margin-bottom:16px;"></div>
+  <div class="form-group"><label>Contact Name</label><input type="text" id="cn" placeholder="e.g. Mom" style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-1);font-size:14px;outline:none;width:100%;"></div>
+  <div class="form-group" style="margin-top:10px;"><label>Phone Number</label><input type="tel" id="cp" placeholder="e.g. 9876543210" style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-1);font-size:14px;outline:none;width:100%;"></div>
+  <button onclick="addContact()" class="btn btn-primary" style="margin-top:10px;">➕ Add Contact</button>
+</div>
+</div>
+
+<!-- FIRST AID -->
+<div class="card anim anim-d2">
+  <div class="card-title">🩹 Quick First Aid Guide</div>
+  <div class="g3" style="gap:16px;">
+    {% for icon,title,steps in [
+      ('❤️','Heart Attack',['Call 108 immediately','Keep patient calm & still','Loosen tight clothing','Give aspirin if not allergic','Begin CPR if unconscious']),
+      ('🧠','Stroke – FAST Test',['F – Face drooping?','A – Arm weakness?','S – Speech slurred?','T – Time to call 108','Do not give food or water']),
+      ('🫁','Choking',['Encourage coughing','5 firm back blows','5 abdominal thrusts','Repeat until cleared','Call 108 if unconscious']),
+      ('🩸','Heavy Bleeding',['Apply firm pressure','Elevate the wound','Use clean cloth/bandage','Do not remove cloth','Call 108 if severe']),
+      ('🔥','Burns',['Cool with cold water 10 min','Do not use ice or butter','Cover with clean cloth','Do not burst blisters','Seek medical help']),
+      ('⚡','Electric Shock',['Do NOT touch the person','Switch off power source','Call 108 immediately','Check breathing','Begin CPR if needed']),
+    ] %}
+    <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:10px;padding:16px;">
+      <div style="font-size:26px;margin-bottom:8px;">{{ icon }}</div>
+      <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:10px;">{{ title }}</div>
+      <ul style="color:var(--text-2);font-size:12px;line-height:1.9;padding-left:16px;">
+        {% for s in steps %}<li>{{ s }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="warn-box mt24">⚠️ This is basic first aid only. Always call 108 for life-threatening situations. Never delay professional medical help.</div>
+</div>
+
+</div>
+</div>
+</div>
+<script>
+function callAmb() {
+  if (confirm('📞 Call Ambulance – 108\n\nThis will initiate an emergency call. Proceed?')) window.location.href = 'tel:108';
+}
+function loadContacts() {
+  const list = document.getElementById('contacts-list');
+  if (!list) return;
+  const contacts = JSON.parse(localStorage.getItem('em_contacts') || '[]');
+  list.innerHTML = '';
+  if (!contacts.length) { list.innerHTML = '<p style="color:var(--text-3);font-size:13px;">No contacts saved yet.</p>'; return; }
+  contacts.forEach((c, i) => {
+    list.innerHTML += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--navy-3);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text-1);">👤 ${c.name}</div><a href="tel:${c.phone}" style="font-size:12px;color:var(--cyan);">${c.phone}</a></div><button onclick="removeContact(${i})" style="background:rgba(255,61,90,.15);border:1px solid rgba(255,61,90,.3);color:var(--red);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Remove</button></div>`;
+  });
+}
+function addContact() {
+  const n = document.getElementById('cn')?.value?.trim();
+  const p = document.getElementById('cp')?.value?.trim();
+  if (!n || !p) { alert('Please enter both name and phone.'); return; }
+  const contacts = JSON.parse(localStorage.getItem('em_contacts') || '[]');
+  contacts.push({ name: n, phone: p });
+  localStorage.setItem('em_contacts', JSON.stringify(contacts));
+  document.getElementById('cn').value = ''; document.getElementById('cp').value = '';
+  loadContacts();
+}
+function removeContact(i) {
+  const contacts = JSON.parse(localStorage.getItem('em_contacts') || '[]');
+  contacts.splice(i, 1);
+  localStorage.setItem('em_contacts', JSON.stringify(contacts));
+  loadContacts();
+}
+document.addEventListener('DOMContentLoaded', loadContacts);
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

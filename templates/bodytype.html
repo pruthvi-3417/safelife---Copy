@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Body Type Analyzer – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Analyzing Body Type...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('bodytype') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🧬 AI Body Type Analyzer</div>
+</div>
+<div class="page-body">
+
+<div class="g2 anim" style="align-items:start;">
+<div class="card">
+  <div class="card-title">📏 Enter Your Measurements</div>
+  <p style="color:var(--text-3);font-size:13px;margin-bottom:20px;">Our AI analyzes your body composition to determine your somatotype and provide personalized recommendations.</p>
+  <div style="display:flex;flex-direction:column;gap:14px;" id="analyzer-form">
+    <div class="form-field"><label>⚖️ Weight (kg)</label><input type="number" id="bt-weight" placeholder="e.g. 70" min="30" max="200"></div>
+    <div class="form-field"><label>📏 Height (cm)</label><input type="number" id="bt-height" placeholder="e.g. 170" min="100" max="250"></div>
+    <div class="form-field"><label>💪 Wrist circumference (cm)</label><input type="number" id="bt-wrist" placeholder="e.g. 16" min="10" max="25" step="0.5"></div>
+    <div class="form-field"><label>🦵 Hip circumference (cm)</label><input type="number" id="bt-hip" placeholder="e.g. 90" min="50" max="150"></div>
+    <div class="form-field"><label>🧑 Age</label><input type="number" id="bt-age" placeholder="e.g. 25" min="10" max="100"></div>
+    <div class="form-field">
+      <label>⚧️ Gender</label>
+      <select id="bt-gender" style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-1);font-size:14px;outline:none;width:100%;">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
+    <button onclick="analyzeBodyType()" class="analyze-btn">🧬 Analyze My Body Type</button>
+  </div>
+</div>
+
+<div id="result-panel">
+  <!-- Body type cards -->
+  <div class="card mb16">
+    <div class="card-title">📚 The 3 Body Types</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div id="bt-ecto" style="padding:14px;border-radius:10px;border:2px solid var(--border);background:var(--navy-3);transition:all 0.3s;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:24px;">🏃</span>
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text-1);">Ectomorph</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);">Lean, fast metabolism, difficulty gaining weight. Long limbs, small frame.</div>
+      </div>
+      <div id="bt-meso" style="padding:14px;border-radius:10px;border:2px solid var(--border);background:var(--navy-3);transition:all 0.3s;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:24px;">🏋️</span>
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text-1);">Mesomorph</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);">Athletic build, gains muscle easily. Medium frame, naturally strong.</div>
+      </div>
+      <div id="bt-endo" style="padding:14px;border-radius:10px;border:2px solid var(--border);background:var(--navy-3);transition:all 0.3s;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:24px;">🌿</span>
+          <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text-1);">Endomorph</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);">Gains weight easily, slower metabolism. Round, soft body, wide frame.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bt-result" style="display:none;" class="card">
+    <div class="card-title">🎯 Your Result</div>
+    <div id="result-content"></div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+function analyzeBodyType() {
+  const w = parseFloat(document.getElementById('bt-weight').value);
+  const h = parseFloat(document.getElementById('bt-height').value);
+  const wrist = parseFloat(document.getElementById('bt-wrist').value);
+  const hip = parseFloat(document.getElementById('bt-hip').value);
+  const age = parseInt(document.getElementById('bt-age').value);
+  const gender = document.getElementById('bt-gender').value;
+  if (!w || !h) { alert('Please enter at least weight and height.'); return; }
+  const bmi = w / ((h/100)**2);
+  const frameSize = wrist ? (h / (wrist || 16)) : (h / 16);
+  let type, icon, color, diet, exercise, tips;
+  if (bmi < 18.5 || (wrist && frameSize > 10.4)) {
+    type = 'Ectomorph'; icon = '🏃'; color = 'var(--cyan)'; id = 'bt-ecto';
+    diet = 'High calorie diet with complex carbs. Eat every 2-3 hours. Include: rice, pasta, nuts, avocado, whole milk, eggs.';
+    exercise = 'Focus on strength training 3-4x/week. Compound lifts: squats, deadlifts, bench press. Limit cardio.';
+    tips = ['Eat before bed to prevent muscle breakdown', 'Use protein shakes to boost calorie intake', 'Rest at least 48 hours between muscle groups', 'Track calories to ensure surplus'];
+  } else if (bmi >= 25 || (wrist && frameSize < 9.9)) {
+    type = 'Endomorph'; icon = '🌿'; color = 'var(--orange)'; id = 'bt-endo';
+    diet = 'Calorie-controlled, high protein diet. Low GI carbs: oats, quinoa, sweet potato. Avoid sugar, processed foods.';
+    exercise = 'Mix of cardio (4-5x/week) and strength training. HIIT workouts, cycling, walking 10,000 steps/day.';
+    tips = ['Eat smaller frequent meals', 'Avoid eating late at night', 'Stay hydrated — drink 3L water/day', 'Track macros: 40% protein, 30% carbs, 30% fat'];
+  } else {
+    type = 'Mesomorph'; icon = '🏋️'; color = 'var(--green)'; id = 'bt-meso';
+    diet = 'Balanced diet: 40% carbs, 30% protein, 30% fat. Eat clean whole foods. Lean meats, vegetables, whole grains.';
+    exercise = 'Versatile — can do both strength and cardio effectively. 4-5x/week training. Progressive overload for best results.';
+    tips = ['Maintain consistent training schedule', 'Periodize your workouts every 8-12 weeks', 'Focus on recovery — sleep 7-9 hours', 'Stay hydrated — 2.5-3L water/day'];
+  }
+  document.querySelectorAll('[id^="bt-ecto"],[id^="bt-meso"],[id^="bt-endo"]').forEach(el => {
+    el.style.borderColor = 'var(--border)'; el.style.background = 'var(--navy-3)';
+  });
+  const sel = document.getElementById(id);
+  if (sel) { sel.style.borderColor = color; sel.style.background = `rgba(0,229,255,0.06)`; }
+  document.getElementById('bt-result').style.display = 'block';
+  document.getElementById('result-content').innerHTML = `
+    <div style="text-align:center;padding:20px;background:rgba(0,229,255,0.05);border-radius:12px;margin-bottom:16px;border:1px solid rgba(0,229,255,0.15);">
+      <div style="font-size:48px;margin-bottom:8px;">${icon}</div>
+      <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:${color};">${type}</div>
+      <div style="font-size:13px;color:var(--text-3);margin-top:4px;">BMI: ${bmi.toFixed(1)} | Frame Score: ${frameSize.toFixed(1)}</div>
+    </div>
+    <div style="margin-bottom:14px;"><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:8px;">🥗 Recommended Diet</div><div style="font-size:13px;color:var(--text-2);line-height:1.7;">${diet}</div></div>
+    <div style="margin-bottom:14px;"><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:8px;">🏋️ Exercise Plan</div><div style="font-size:13px;color:var(--text-2);line-height:1.7;">${exercise}</div></div>
+    <div><div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:8px;">💡 Key Tips</div>${tips.map(t => `<div style="padding:8px 12px;background:var(--navy-3);border-radius:6px;margin-bottom:6px;font-size:13px;color:var(--text-2);">✓ ${t}</div>`).join('')}</div>
+    <div class="warn-box" style="margin-top:12px;">⚠️ Body type is a guideline only. Consult a fitness professional for personalized plans.</div>
+  `;
+}
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

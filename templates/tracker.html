@@ -1,0 +1,48 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Daily Tracker – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Tracker...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('tracker') }}
+<div class="main"><div class="topbar"><div class="topbar-title">💧 Daily Health Tracker</div></div>
+<div class="page-body">
+<form method="POST" action="/tracker">
+<div class="g2 mb24 anim">
+<div class="card">
+<div class="card-title">💧 Water Intake Today</div>
+<p style="color:var(--text-3);font-size:13px;margin-bottom:16px;">Click cups to log your water intake (each cup = 250ml)</p>
+<div class="water-cups" id="cups">
+{% set filled = today_log.water_cups if today_log else 0 %}
+{% for i in range(1,9) %}
+<span class="cup {% if i<=filled %}filled{% endif %}" onclick="toggleCup({{ i }})" title="{{ i }} cups = {{ i*250 }}ml">🥤</span>{% endfor %}
+</div>
+<input type="hidden" name="water_cups" id="water-cups-val" value="{{ filled }}">
+<p style="color:var(--text-3);font-size:12px;text-align:center;margin-top:8px;">Goal: 8 cups (2 litres)</p>
+{% if today_log %}<p style="color:var(--cyan);font-size:13px;text-align:center;">Today: {{ today_log.water_cups }} cups ({{ today_log.water_cups * 250 }}ml)</p>{% endif %}
+</div>
+<div class="card">
+<div class="card-title">🚶 Steps Today</div>
+<p style="color:var(--text-3);font-size:13px;margin-bottom:16px;">Enter your step count for today</p>
+<div class="form-group"><input type="number" name="steps_log" min="0" max="50000" placeholder="e.g. 8000" value="{{ today_log.steps_log if today_log else '' }}" style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text-1);font-size:20px;font-family:var(--font-h);outline:none;width:100%;"></div>
+{% if today_log %}
+<div class="sleep-quality-bar"><div class="sleep-fill" style="width:{{ [today_log.steps_log/10000*100,100]|min|round|int }}%;"></div></div>
+<p style="color:var(--text-3);font-size:12px;text-align:center;margin-top:4px;">{{ today_log.steps_log }}/10,000 goal</p>{% endif %}
+</div>
+</div>
+<button type="submit" class="analyze-btn anim anim-d1">💾 Save Today's Log</button>
+</form>
+{% if history %}
+<div class="card mt24 anim anim-d2">
+<div class="card-title">📅 Last 7 Days</div>
+<div style="overflow-x:auto;"><table class="data-table">
+<thead><tr><th>Date</th><th>Water Cups</th><th>Steps</th><th>Water Goal</th><th>Steps Goal</th></tr></thead>
+<tbody>{% for h in history %}
+<tr>
+<td>{{ h.log_date }}</td>
+<td class="mono">{{ h.water_cups }} 🥤</td>
+<td class="mono">{{ "{:,}".format(h.steps_log) }}</td>
+<td><span class="risk {% if h.water_cups>=8 %}risk-Low{% elif h.water_cups>=5 %}risk-Medium{% else %}risk-High{% endif %}" style="font-size:11px;padding:2px 8px;">{% if h.water_cups>=8 %}✓ Met{% elif h.water_cups>=5 %}Partial{% else %}Low{% endif %}</span></td>
+<td><span class="risk {% if h.steps_log>=10000 %}risk-Low{% elif h.steps_log>=5000 %}risk-Medium{% else %}risk-High{% endif %}" style="font-size:11px;padding:2px 8px;">{% if h.steps_log>=10000 %}✓ Met{% elif h.steps_log>=5000 %}Partial{% else %}Low{% endif %}</span></td>
+</tr>{% endfor %}
+</tbody></table></div>
+</div>{% endif %}
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>

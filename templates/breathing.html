@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Breathing Exercise – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.breath-circle {
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,255,0.3), rgba(0,100,255,0.1));
+  border: 3px solid var(--cyan);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto;
+  transition: transform 4s ease-in-out, box-shadow 4s ease-in-out;
+  box-shadow: 0 0 30px rgba(0,229,255,0.2);
+  cursor: pointer;
+}
+.breath-circle.inhale {
+  transform: scale(1.6);
+  box-shadow: 0 0 60px rgba(0,229,255,0.5);
+}
+.breath-circle.hold {
+  transform: scale(1.6);
+  box-shadow: 0 0 80px rgba(0,255,136,0.5);
+  border-color: var(--green);
+}
+.breath-circle.exhale {
+  transform: scale(1);
+  box-shadow: 0 0 20px rgba(0,229,255,0.1);
+}
+.breath-text {
+  font-family: var(--font-h);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-1);
+  text-align: center;
+}
+.timer-ring { transform: rotate(-90deg); }
+.timer-fill {
+  transition: stroke-dashoffset 1s linear;
+  stroke-linecap: round;
+}
+.technique-card {
+  background: var(--navy-3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.technique-card:hover, .technique-card.active {
+  border-color: var(--cyan);
+  background: rgba(0,229,255,0.06);
+}
+.technique-name { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.technique-sub { font-size: 12px; color: var(--text-3); }
+@keyframes pulseRing {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(0,229,255,0.3);
+  animation: pulseRing 2s infinite;
+}
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Breathing Exercise...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('breathing') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">🧘 Guided Breathing Exercise</div>
+  <div class="topbar-right"><span class="live-badge">Wellness</span></div>
+</div>
+<div class="page-body">
+
+<!-- TECHNIQUE SELECTOR -->
+<div class="card mb24 anim">
+  <div class="card-title">🎯 Choose Breathing Technique</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+    <div class="technique-card active" onclick="setTechnique('478')" id="t-478">
+      <div style="font-size:28px;margin-bottom:8px;">😌</div>
+      <div class="technique-name">4-7-8</div>
+      <div class="technique-sub">Inhale 4s • Hold 7s • Exhale 8s</div>
+      <div class="technique-sub" style="margin-top:4px;color:var(--green);">Best for sleep</div>
+    </div>
+    <div class="technique-card" onclick="setTechnique('box')" id="t-box">
+      <div style="font-size:28px;margin-bottom:8px;">🧊</div>
+      <div class="technique-name">Box Breathing</div>
+      <div class="technique-sub">4s each phase</div>
+      <div class="technique-sub" style="margin-top:4px;color:var(--cyan);">Best for focus</div>
+    </div>
+    <div class="technique-card" onclick="setTechnique('deep')" id="t-deep">
+      <div style="font-size:28px;margin-bottom:8px;">🫁</div>
+      <div class="technique-name">Deep Breathing</div>
+      <div class="technique-sub">Inhale 5s • Exhale 5s</div>
+      <div class="technique-sub" style="margin-top:4px;color:var(--yellow);">Best for stress</div>
+    </div>
+    <div class="technique-card" onclick="setTechnique('calm')" id="t-calm">
+      <div style="font-size:28px;margin-bottom:8px;">🌊</div>
+      <div class="technique-name">Calm Breath</div>
+      <div class="technique-sub">Inhale 3s • Exhale 6s</div>
+      <div class="technique-sub" style="margin-top:4px;color:var(--orange);">Best for anxiety</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN BREATHING ANIMATION -->
+<div class="g2 anim anim-d1" style="align-items:start;">
+<div class="card" style="text-align:center;">
+  <div class="card-title" style="justify-content:center;">🫁 Breathing Guide</div>
+
+  <!-- Phase display -->
+  <div id="phase-label" style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--cyan);margin-bottom:8px;">Ready</div>
+  <div id="count-label" style="font-family:var(--font-m);font-size:48px;font-weight:700;color:var(--text-1);margin-bottom:24px;">-</div>
+
+  <!-- Animated circle -->
+  <div style="position:relative;width:220px;height:220px;margin:0 auto 24px;">
+    <div class="pulse-ring" style="width:240px;height:240px;top:-10px;left:-10px;"></div>
+    <div class="pulse-ring" style="width:260px;height:260px;top:-20px;left:-20px;animation-delay:0.5s;"></div>
+    <div class="breath-circle" id="breath-circle">
+      <span class="breath-text" id="breath-emoji">🫁</span>
+    </div>
+  </div>
+
+  <!-- Timer ring SVG -->
+  <svg width="120" height="120" style="margin:0 auto 20px;display:block;">
+    <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" stroke-width="8"/>
+    <circle id="timer-ring" class="timer-fill timer-ring" cx="60" cy="60" r="52"
+      fill="none" stroke="var(--cyan)" stroke-width="8"
+      stroke-dasharray="326" stroke-dashoffset="326"/>
+    <text x="60" y="65" text-anchor="middle" fill="var(--text-1)"
+      style="font-family:var(--font-h);font-size:22px;font-weight:700;" id="timer-text">0</text>
+  </svg>
+
+  <!-- Controls -->
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <button id="start-btn" onclick="startBreathing()" class="btn btn-primary" style="width:auto;padding:12px 32px;font-size:16px;">▶ Start</button>
+    <button onclick="stopBreathing()" class="btn btn-outline" style="padding:12px 24px;">⏹ Stop</button>
+  </div>
+
+  <div style="margin-top:16px;">
+    <div style="font-size:12px;color:var(--text-3);">Sessions completed today</div>
+    <div id="session-count" style="font-family:var(--font-h);font-size:24px;font-weight:700;color:var(--text-1);">0</div>
+  </div>
+</div>
+
+<!-- BENEFITS + INSTRUCTIONS -->
+<div>
+  <div class="card mb16">
+    <div class="card-title">💡 How It Works</div>
+    <div id="technique-info" style="font-size:14px;color:var(--text-2);line-height:1.8;">
+      The <strong style="color:var(--cyan);">4-7-8 technique</strong> involves inhaling for 4 seconds, holding for 7 seconds, and exhaling for 8 seconds. This pattern activates your parasympathetic nervous system, reducing anxiety and helping you fall asleep faster.
+    </div>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+        <span style="font-size:18px;">😴</span>
+        <span style="font-size:13px;color:var(--text-2);">Reduces insomnia by calming racing thoughts</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+        <span style="font-size:18px;">💓</span>
+        <span style="font-size:13px;color:var(--text-2);">Lowers heart rate and blood pressure</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+        <span style="font-size:18px;">🧠</span>
+        <span style="font-size:13px;color:var(--text-2);">Reduces cortisol (stress hormone) levels</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);">
+        <span style="font-size:18px;">🎯</span>
+        <span style="font-size:13px;color:var(--text-2);">Improves focus and mental clarity</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Today's Stats</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--green);" id="stat-sessions">0</div>
+        <div style="font-size:11px;color:var(--text-3);">Sessions</div>
+      </div>
+      <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--cyan);" id="stat-minutes">0</div>
+        <div style="font-size:11px;color:var(--text-3);">Minutes</div>
+      </div>
+    </div>
+    <div class="warn-box" style="margin-top:12px;">
+      💡 Practice for 5–10 minutes daily for best results. Morning and bedtime are ideal.
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+const techniques = {
+  '478': { inhale:4, hold:7, exhale:8, name:'4-7-8 Breathing', info:'The <strong style="color:var(--cyan);">4-7-8 technique</strong> involves inhaling for 4 seconds, holding for 7 seconds, and exhaling for 8 seconds. Activates parasympathetic nervous system, reducing anxiety and helping sleep.' },
+  'box': { inhale:4, hold:4, exhale:4, name:'Box Breathing', info:'<strong style="color:var(--cyan);">Box Breathing</strong> uses equal 4-second phases for inhale, hold, exhale, and hold again. Used by Navy SEALs and athletes for focus, performance, and stress management.' },
+  'deep': { inhale:5, hold:0, exhale:5, name:'Deep Breathing', info:'<strong style="color:var(--cyan);">Deep Breathing</strong> with 5 seconds in and 5 seconds out activates the body\'s relaxation response, lowering blood pressure and reducing stress hormones quickly.' },
+  'calm': { inhale:3, hold:0, exhale:6, name:'Calm Breath', info:'<strong style="color:var(--cyan);">Calm Breathing</strong> with a longer exhale than inhale directly stimulates the vagus nerve, instantly calming anxiety and panic responses.' }
+};
+
+let currentTechnique = '478';
+let breathTimer = null;
+let sessions = 0;
+let totalMinutes = 0;
+
+function setTechnique(t) {
+  currentTechnique = t;
+  document.querySelectorAll('.technique-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('t-'+t).classList.add('active');
+  document.getElementById('technique-info').innerHTML = techniques[t].info;
+  stopBreathing();
+}
+
+function startBreathing() {
+  document.getElementById('start-btn').disabled = true;
+  runCycle();
+}
+
+async function runCycle() {
+  const t = techniques[currentTechnique];
+  const phases = [
+    { label:'Inhale', emoji:'🌬️', dur:t.inhale, cls:'inhale', color:'var(--cyan)' },
+    ...(t.hold > 0 ? [{ label:'Hold', emoji:'⏸️', dur:t.hold, cls:'hold', color:'var(--green)' }] : []),
+    { label:'Exhale', emoji:'💨', dur:t.exhale, cls:'exhale', color:'var(--orange)' },
+    ...(currentTechnique === 'box' ? [{ label:'Hold', emoji:'⏸️', dur:4, cls:'hold', color:'var(--green)' }] : []),
+  ];
+  for (const phase of phases) {
+    if (!document.getElementById('start-btn').disabled) return;
+    await runPhase(phase);
+  }
+  sessions++;
+  totalMinutes = Math.round((sessions * (t.inhale + (t.hold||0) + t.exhale)) / 60 * 10) / 10;
+  document.getElementById('stat-sessions').textContent = sessions;
+  document.getElementById('stat-minutes').textContent = totalMinutes;
+  document.getElementById('session-count').textContent = sessions;
+  if (document.getElementById('start-btn').disabled) runCycle();
+}
+
+function runPhase(phase) {
+  return new Promise(resolve => {
+    const circle = document.getElementById('breath-circle');
+    const ring = document.getElementById('timer-ring');
+    const timerText = document.getElementById('timer-text');
+    circle.className = 'breath-circle ' + phase.cls;
+    document.getElementById('phase-label').textContent = phase.label;
+    document.getElementById('phase-label').style.color = phase.color;
+    document.getElementById('breath-emoji').textContent = phase.emoji;
+    ring.style.stroke = phase.color;
+    let count = phase.dur;
+    document.getElementById('count-label').textContent = count;
+    timerText.textContent = count;
+    ring.style.strokeDashoffset = '0';
+    setTimeout(() => { ring.style.strokeDashoffset = '326'; ring.style.transition = `stroke-dashoffset ${phase.dur}s linear`; }, 50);
+    const interval = setInterval(() => {
+      count--;
+      document.getElementById('count-label').textContent = count;
+      timerText.textContent = count;
+      if (count <= 0) { clearInterval(interval); resolve(); }
+    }, 1000);
+    breathTimer = interval;
+  });
+}
+
+function stopBreathing() {
+  clearInterval(breathTimer);
+  const circle = document.getElementById('breath-circle');
+  circle.className = 'breath-circle';
+  document.getElementById('phase-label').textContent = 'Ready';
+  document.getElementById('count-label').textContent = '-';
+  document.getElementById('breath-emoji').textContent = '🫁';
+  document.getElementById('timer-ring').style.strokeDashoffset = '326';
+  document.getElementById('start-btn').disabled = false;
+}
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

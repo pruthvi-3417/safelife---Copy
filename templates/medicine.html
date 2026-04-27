@@ -1,0 +1,32 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Medicine Reminder – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Medicines...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('medicine') }}
+<div class="main"><div class="topbar"><div class="topbar-title">💊 Medicine Reminder</div></div>
+<div class="page-body">
+<div class="g2 anim" style="align-items:start;">
+<div class="card">
+<div class="card-title">➕ Add Medicine</div>
+<form method="POST" action="/medicine">
+<div class="form-group"><label>Medicine Name</label><input type="text" name="name" placeholder="e.g. Paracetamol 500mg" required></div>
+<div class="form-group"><label>Dosage</label><input type="text" name="dosage" placeholder="e.g. 1 tablet after food" required></div>
+<div class="form-group"><label>Reminder Time</label><input type="time" name="time" required></div>
+<button type="submit" class="btn btn-primary">➕ Add Reminder</button>
+</form>
+</div>
+<div class="card">
+<div class="card-title">📋 My Medicines</div>
+{% if meds %}{% for m in meds %}
+<div class="med-card">
+<div>
+<div class="med-name">💊 {{ m.name }}</div>
+<div class="med-info">{{ m.dosage }} &nbsp;|&nbsp; ⏰ {{ m.time }}</div>
+</div>
+<a href="/medicine/delete/{{ m.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this medicine?')">🗑️</a>
+</div>{% endfor %}
+{% else %}<div class="empty" style="padding:24px;"><div class="empty-icon" style="font-size:36px;">💊</div><p>No medicines added yet.</p></div>{% endif %}
+</div>
+</div>
+<div class="warn-box mt24 anim anim-d1">⚠️ Always take medicines as prescribed by your doctor. Do not self-medicate. This is a reminder tool only.</div>
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>

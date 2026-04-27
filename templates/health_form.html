@@ -1,0 +1,23 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Health Check – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('health') }}
+<div class="main"><div class="topbar"><div class="topbar-title">📋 Health Check</div><div class="topbar-right"><a href="/dashboard" class="btn btn-outline btn-sm">← Back</a></div></div>
+<div class="page-body"><div class="card anim">
+<div class="card-title">Enter Your Health Parameters</div>
+<p style="color:var(--text-3);font-size:13px;margin-bottom:24px;">Fill in your daily health metrics. Our AI will analyze and predict your health risks instantly.</p>
+<form method="POST" action="/analyze">
+<div class="form-grid">
+<div class="form-field"><label>🧑 Age (years)</label><div class="input-wrap"><input type="number" name="age" min="5" max="100" placeholder="e.g. 25" required><span class="unit">yrs</span></div></div>
+<div class="form-field"><label>📏 Height (cm)</label><div class="input-wrap"><input type="number" name="height" min="100" max="250" step="0.1" placeholder="e.g. 170" required><span class="unit">cm</span></div></div>
+<div class="form-field"><label>⚖️ Weight (kg)</label><div class="input-wrap"><input type="number" name="weight" min="20" max="300" step="0.1" placeholder="e.g. 70" required><span class="unit">kg</span></div></div>
+<div class="form-field"><label>😴 Sleep (hrs/night)</label><div class="input-wrap"><input type="number" name="sleep" min="1" max="14" step="0.5" placeholder="e.g. 7" required><span class="unit">hrs</span></div></div>
+<div class="form-field"><label>💧 Water Intake (L/day)</label><div class="input-wrap"><input type="number" name="water" min="0.5" max="10" step="0.1" placeholder="e.g. 2.5" required><span class="unit">L</span></div></div>
+<div class="form-field"><label>🚶 Daily Steps</label><div class="input-wrap"><input type="number" name="steps" min="0" max="50000" step="100" placeholder="e.g. 8000" required><span class="unit">steps</span></div></div>
+<div class="form-field" style="grid-column:1/-1;"><label>🧠 Stress Level</label>
+<select name="stress" required><option value="" disabled selected>-- Select stress level --</option><option value="Low">🟢 Low – Relaxed and in control</option><option value="Medium">🟡 Medium – Somewhat stressed</option><option value="High">🔴 High – Frequently overwhelmed</option></select></div>
+</div>
+<button type="submit" class="analyze-btn">🔬 Analyze My Health</button>
+<p style="color:var(--text-3);font-size:12px;margin-top:12px;text-align:center;">Your data is stored securely and visible only to you.</p>
+</form></div></div></div></div>
+<script src="/static/js/main.js"></script></body></html>

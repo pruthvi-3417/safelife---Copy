@@ -1,0 +1,34 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Sleep Analyzer – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Analyzing Sleep...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('sleep') }}
+<div class="main"><div class="topbar"><div class="topbar-title">😴 Sleep Quality Analyzer</div></div>
+<div class="page-body">
+{% if data %}
+{% set s = data.sleep %}
+{% set quality = 'Excellent' if s>=8 else 'Good' if s>=7 else 'Fair' if s>=6 else 'Poor' if s>=5 else 'Very Poor' %}
+{% set pct = [s/9*100,100]|min|round|int %}
+<div class="g2 mb24 anim">
+<div class="card" style="text-align:center;">
+<div class="card-title" style="justify-content:center;">😴 Sleep Duration</div>
+<div style="font-family:var(--font-h);font-size:64px;font-weight:800;color:var(--text-1);line-height:1;margin:12px 0;">{{ s }}h</div>
+<div class="sleep-quality-bar"><div class="sleep-fill" style="width:{{ pct }}%;"></div></div>
+<div class="risk {% if s>=7 %}risk-Low{% elif s>=6 %}risk-Medium{% else %}risk-High{% endif %}" style="margin-top:12px;">{{ quality }} Quality</div>
+<p style="color:var(--text-3);font-size:12px;margin-top:8px;">Recommended: 7–9 hours</p>
+</div>
+<div class="card">
+<div class="card-title">📊 Sleep Analysis</div>
+<div class="flex-b" style="padding:10px 14px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);margin-bottom:8px;"><span style="color:var(--text-3);">Your sleep</span><span class="mono" style="color:var(--text-1);">{{ s }} hrs</span></div>
+<div class="flex-b" style="padding:10px 14px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);margin-bottom:8px;"><span style="color:var(--text-3);">Recommended</span><span class="mono" style="color:var(--green);">7–9 hrs</span></div>
+<div class="flex-b" style="padding:10px 14px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);margin-bottom:8px;"><span style="color:var(--text-3);">Deficit/Surplus</span><span class="mono" style="color:{% if s>=7 %}var(--green){% else %}var(--red){% endif %};">{% if s>=7 %}+{{ (s-7)|round(1) }}h surplus{% else %}-{{ (7-s)|round(1) }}h deficit{% endif %}</span></div>
+<div class="flex-b" style="padding:10px 14px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);"><span style="color:var(--text-3);">Quality Score</span><span class="mono" style="color:var(--cyan);">{{ pct }}/100</span></div>
+</div>
+</div>
+{% else %}<div class="card anim"><div class="empty"><div class="empty-icon">😴</div><p style="color:var(--text-1);font-size:16px;margin-bottom:8px;">No sleep data yet</p><p>Complete a health check first</p><a href="/health_form" class="btn btn-primary" style="display:inline-flex;margin-top:16px;width:auto;padding:12px 28px;">Start Health Check</a></div></div>{% endif %}
+<div class="card anim anim-d1">
+<div class="card-title">💡 Sleep Improvement Tips</div>
+{% for icon,tip in [('🌙','Maintain a fixed sleep and wake time every day, even on weekends.'),('📵','Avoid screens (phone, TV) at least 1 hour before bedtime.'),('🌡️','Keep your bedroom cool (18–22°C), dark, and quiet.'),('☕','Avoid caffeine after 3 PM — coffee, tea, energy drinks.'),('🧘','Practice 10 minutes of deep breathing or meditation before sleep.'),('🚶','Exercise daily, but avoid intense workouts within 3 hours of bedtime.'),('🥛','A small warm glass of milk with turmeric can improve sleep quality.'),('📔','Write down tomorrow\'s to-do list before bed to clear your mind.')] %}
+<div class="sleep-tip-card"><span style="font-size:22px;">{{ icon }}</span><p style="font-size:13px;color:var(--text-2);">{{ tip }}</p></div>{% endfor %}
+</div>
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>

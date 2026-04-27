@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Women Health – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.phase-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:8px;}
+.cycle-viz{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0;}
+.cday{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:default;border:1px solid transparent;}
+.cday.period{background:rgba(255,61,90,.4);border-color:rgba(255,61,90,.6);color:#fff;}
+.cday.fertile{background:rgba(0,255,136,.2);border-color:rgba(0,255,136,.4);color:var(--green);}
+.cday.ovulation{background:rgba(255,214,0,.4);border-color:rgba(255,214,0,.6);color:var(--navy);}
+.cday.today{outline:3px solid var(--cyan);outline-offset:2px;}
+.cday.normal{background:var(--navy-3);border-color:var(--border);color:var(--text-3);}
+.pcos-meter{height:14px;border-radius:7px;background:var(--border);overflow:hidden;margin:8px 0;}
+.pcos-fill{height:100%;border-radius:7px;transition:width 1s ease;}
+.symptom-check{display:none;}
+.symptom-label{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--navy-3);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:8px;font-size:13px;color:var(--text-2);transition:all .15s;}
+.symptom-check:checked + .symptom-label{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06);}
+.symptom-label:hover{border-color:var(--border-2);}
+.result-banner{border-radius:14px;padding:24px;text-align:center;margin-top:20px;}
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Women Health...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('women_health') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">💖 Women's Health Center</div>
+  <div class="topbar-right"><span class="live-badge">Safe & Private</span></div>
+</div>
+<div class="page-body">
+
+<!-- CYCLE TRACKER WITH TODAY'S DATE ANALYSIS -->
+<div class="card mb24 anim">
+  <div class="card-title">🗓️ Smart Cycle Tracker & Analysis</div>
+  <div class="g2" style="align-items:start;">
+    <div>
+      <div class="form-group mb16">
+        <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">📅 Last Period Start Date</label>
+        <input type="date" id="last-period" style="width:100%;background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;outline:none;">
+      </div>
+      <div class="form-group mb16">
+        <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">📏 Average Cycle Length (days)</label>
+        <input type="number" id="cycle-len" value="28" min="21" max="45" style="width:100%;background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;outline:none;">
+      </div>
+      <div class="form-group mb16">
+        <label style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">🩸 Period Duration (days)</label>
+        <input type="number" id="period-dur" value="5" min="2" max="10" style="width:100%;background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;outline:none;">
+      </div>
+      <button class="btn btn-primary" onclick="calculateCycle()" style="width:100%;">📅 Analyze My Cycle</button>
+    </div>
+
+    <div id="cycle-result">
+      <div style="text-align:center;color:var(--text-3);padding:32px;">Enter your period date and click Analyze</div>
+    </div>
+  </div>
+
+  <!-- CYCLE VISUAL -->
+  <div id="cycle-visual" style="display:none;margin-top:20px;">
+    <div style="font-family:var(--font-h);font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:8px;">📊 Your Cycle This Month</div>
+    <div class="cycle-viz" id="cycle-days-viz"></div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);">
+        <span style="width:12px;height:12px;border-radius:50%;background:rgba(255,61,90,.5);display:inline-block;"></span>Period
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);">
+        <span style="width:12px;height:12px;border-radius:50%;background:rgba(0,255,136,.3);display:inline-block;"></span>Fertile
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);">
+        <span style="width:12px;height:12px;border-radius:50%;background:rgba(255,214,0,.5);display:inline-block;"></span>Ovulation
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--cyan);">
+        <span style="width:12px;height:12px;border-radius:50%;outline:2px solid var(--cyan);display:inline-block;"></span>Today
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- PCOS ANALYZER -->
+<div class="card mb24 anim anim-d1">
+  <div class="card-title">🔬 PCOS / PCOD Risk Analyzer</div>
+  <p style="color:var(--text-3);font-size:13px;margin-bottom:20px;">Select all symptoms you experience regularly. Our AI will assess your risk for PCOS/PCOD.</p>
+
+  <div class="g2" style="align-items:start;">
+    <div>
+      <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:10px;">🩸 Menstrual Symptoms</div>
+      {% for id,sym,weight in [
+        ('irr','Irregular periods (>35 days or <21 days)',3),
+        ('skip','Skipping periods (>3 months)',3),
+        ('heavy','Very heavy bleeding / prolonged periods (>7 days)',2),
+        ('spot','Spotting between periods',2),
+        ('pain','Very painful periods (dysmenorrhea)',1),
+      ] %}
+      <input type="checkbox" class="symptom-check pcos-sym" id="{{id}}" data-weight="{{weight}}">
+      <label class="symptom-label" for="{{id}}">{{ sym }}</label>
+      {% endfor %}
+
+      <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--cyan);margin:16px 0 10px;">💊 Hormonal Symptoms</div>
+      {% for id,sym,weight in [
+        ('acne','Acne / oily skin (especially jawline, chin)',2),
+        ('hair','Excess facial or body hair (hirsutism)',3),
+        ('hloss','Thinning hair / hair loss on scalp',2),
+        ('dark','Dark patches on neck or underarms (acanthosis)',3),
+        ('wg','Unexplained weight gain (especially belly fat)',2),
+      ] %}
+      <input type="checkbox" class="symptom-check pcos-sym" id="{{id}}" data-weight="{{weight}}">
+      <label class="symptom-label" for="{{id}}">{{ sym }}</label>
+      {% endfor %}
+    </div>
+
+    <div>
+      <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:10px;">🔬 Other Indicators</div>
+      {% for id,sym,weight in [
+        ('mood','Mood swings / depression / anxiety',1),
+        ('fatigue','Chronic fatigue and low energy',1),
+        ('bs','High blood sugar or insulin resistance',3),
+        ('bp','High blood pressure',1),
+        ('fam','Family history of PCOS or diabetes',2),
+        ('preg','Difficulty getting pregnant',3),
+        ('sleep','Sleep problems / snoring',1),
+      ] %}
+      <input type="checkbox" class="symptom-check pcos-sym" id="{{id}}" data-weight="{{weight}}">
+      <label class="symptom-label" for="{{id}}">{{ sym }}</label>
+      {% endfor %}
+
+      <button class="analyze-btn" onclick="analyzePCOS()" style="margin-top:16px;">🔬 Analyze PCOS Risk</button>
+    </div>
+  </div>
+
+  <div id="pcos-result" style="display:none;margin-top:20px;"></div>
+</div>
+
+<!-- CYCLE PHASES GUIDE -->
+<div class="card mb24 anim anim-d2">
+  <div class="card-title">🌸 Understanding Your Cycle Phases</div>
+  {% for phase,days,bg,icon,desc,tips in [
+    ('Menstrual','Days 1–5','rgba(255,61,90,.07)','🔴','Uterine lining sheds. Hormones are at their lowest. Rest and iron-rich foods are key.',['Rest and sleep more than usual','Warm compress for cramps — works better than painkillers','Eat iron-rich foods: spinach, dates, jaggery, pomegranate','Light yoga — child\'s pose, cat-cow for cramps','Stay hydrated with warm water and herbal teas']),
+    ('Follicular','Days 6–13','rgba(0,229,255,.07)','🟢','Estrogen rises. Energy increases. Best time to start new habits and projects.',['Great time for gym and high-intensity workouts','Eat fresh, colourful vegetables and lean protein','Your brain is sharpest — tackle complex tasks and decisions','Best phase for social activities and meetings','Introduce new healthy habits now — they stick better']),
+    ('Ovulation','Days 14–16','rgba(255,214,0,.07)','🟡','LH surge causes egg release. Peak fertility, energy, and confidence.',['Athletic performance is at its peak — push harder in workouts','Most fertile days — plan accordingly','Your communication skills are at their best this phase','Eat antioxidant-rich foods: berries, nuts, leafy greens','Libido is naturally highest — this is hormonal and normal']),
+    ('Luteal','Days 17–28','rgba(255,140,66,.07)','🟠','Progesterone rises then drops. PMS symptoms may appear. Body craves rest.',['Reduce caffeine and salt — they worsen bloating and cramps','Eat magnesium-rich foods: dark chocolate, nuts, seeds','Reduce exercise intensity — switch to yoga, walking, swimming','Practice self-care: journaling, warm baths, reading','PMS symptoms are real — be kind to yourself this phase']),
+  ] %}
+  <div style="background:{{bg}};border:1px solid {{bg.replace('.07','.2')}};border-radius:12px;padding:20px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="font-size:24px;">{{icon}}</span>
+      <div>
+        <div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--text-1);">{{phase}} Phase</div>
+        <div style="font-size:12px;color:var(--text-3);">{{days}}</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:12px;">{{desc}}</p>
+    {% for tip in tips %}
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px;color:var(--text-2);">✦ {{tip}}</div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- WOMEN HEALTH TOPICS -->
+<div class="card anim anim-d3">
+  <div class="card-title">💊 Essential Women's Health Topics</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;">
+    {% for icon,title,content in [
+      ('🦋','PCOS Management','PCOS affects 1 in 5 Indian women. Key: Low-carb diet, inositol supplement, regular exercise to improve insulin resistance. Consult gynaecologist for hormonal treatment.'),
+      ('🦴','Bone Health After 30','Women lose bone density rapidly after menopause. Start Calcium (1000mg) + Vitamin D3 daily from age 30. Weight-bearing exercise is essential.'),
+      ('🧠','Mental Health & Hormones','Oestrogen and progesterone directly affect serotonin. Mood swings, anxiety, and depression can be hormonally driven. Track symptoms with your cycle.'),
+      ('🤰','Prenatal Nutrition','Start Folic Acid 400mcg at least 3 months before conception. Iron, Calcium, DHA, Iodine are critical. Avoid alcohol, raw fish, excess caffeine.'),
+      ('💪','Iron & Anaemia','Women lose significant iron every month. Signs: fatigue, pale skin, shortness of breath. Eat iron-rich foods with Vitamin C. Annual blood test recommended.'),
+      ('🌡️','Thyroid in Women','Women are 7x more likely than men to have thyroid disorders. Test TSH every 2 years after 30. Signs: weight changes, fatigue, hair loss, irregular periods.'),
+    ] %}
+    <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:12px;padding:16px;">
+      <div style="font-size:28px;margin-bottom:10px;">{{icon}}</div>
+      <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:8px;">{{title}}</div>
+      <p style="font-size:13px;color:var(--text-2);line-height:1.6;">{{content}}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+// ── CYCLE CALCULATOR ─────────────────────────
+function calculateCycle() {
+  const lastStr = document.getElementById('last-period').value;
+  const cycleLen = parseInt(document.getElementById('cycle-len').value) || 28;
+  const periodDur = parseInt(document.getElementById('period-dur').value) || 5;
+  if (!lastStr) { alert('Please enter your last period start date.'); return; }
+
+  const last     = new Date(lastStr);
+  const today    = new Date();
+  today.setHours(0,0,0,0);
+
+  const dayOfCycle = Math.floor((today - last) / 86400000) + 1;
+  const ovulDay    = cycleLen - 14;
+  const fertStart  = ovulDay - 5;
+  const fertEnd    = ovulDay + 1;
+
+  const nextPeriod = new Date(last); nextPeriod.setDate(last.getDate() + cycleLen);
+  const ovulDate   = new Date(last); ovulDate.setDate(last.getDate() + ovulDay - 1);
+  const fertSDate  = new Date(last); fertSDate.setDate(last.getDate() + fertStart - 1);
+  const fertEDate  = new Date(last); fertEDate.setDate(last.getDate() + fertEnd - 1);
+  const daysToNext = Math.ceil((nextPeriod - today) / 86400000);
+  const fmt = d => d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+
+  // Determine current phase
+  let currentPhase, phaseColor, phaseIcon;
+  if (dayOfCycle >= 1 && dayOfCycle <= periodDur) {
+    currentPhase = 'Menstrual Phase 🔴';
+    phaseColor   = 'rgba(255,61,90,.1)';
+    phaseIcon    = '🔴';
+  } else if (dayOfCycle <= ovulDay - 1) {
+    currentPhase = 'Follicular Phase 🟢';
+    phaseColor   = 'rgba(0,229,255,.1)';
+    phaseIcon    = '🟢';
+  } else if (dayOfCycle <= ovulDay + 1) {
+    currentPhase = 'Ovulation Phase 🟡';
+    phaseColor   = 'rgba(255,214,0,.1)';
+    phaseIcon    = '🟡';
+  } else if (dayOfCycle <= cycleLen) {
+    currentPhase = 'Luteal Phase 🟠';
+    phaseColor   = 'rgba(255,140,66,.1)';
+    phaseIcon    = '🟠';
+  } else {
+    currentPhase = 'Period May Be Due 🔴';
+    phaseColor   = 'rgba(255,61,90,.1)';
+    phaseIcon    = '⚠️';
+  }
+
+  // Irregular cycle warning
+  let irregularWarn = '';
+  if (cycleLen < 21 || cycleLen > 35) {
+    irregularWarn = `<div style="background:rgba(255,61,90,.08);border:1px solid rgba(255,61,90,.2);border-radius:8px;padding:12px;margin-top:12px;font-size:13px;color:#ff8099;">
+      ⚠️ <b>Irregular cycle detected</b> (${cycleLen} days). Normal range is 21–35 days. Cycles consistently outside this range may indicate PCOS, thyroid issues, or hormonal imbalance. Consult a gynaecologist.
+    </div>`;
+  }
+
+  if (periodDur > 7) {
+    irregularWarn += `<div style="background:rgba(255,140,66,.08);border:1px solid rgba(255,140,66,.2);border-radius:8px;padding:12px;margin-top:8px;font-size:13px;color:var(--orange);">
+      ⚠️ <b>Long periods (${periodDur} days)</b> — Periods lasting more than 7 days (menorrhagia) can cause iron deficiency anaemia. Please consult a gynaecologist.
+    </div>`;
+  }
+
+  document.getElementById('cycle-result').innerHTML = `
+    <div style="background:${phaseColor};border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:6px;">${phaseIcon}</div>
+      <div style="font-family:var(--font-h);font-size:16px;font-weight:700;color:var(--text-1);">You are in:</div>
+      <div style="font-family:var(--font-h);font-size:18px;font-weight:800;color:var(--cyan);margin-top:4px;">${currentPhase}</div>
+      <div style="font-size:13px;color:var(--text-3);margin-top:6px;">Day ${dayOfCycle > 0 ? dayOfCycle : '—'} of your cycle</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Next Period</div>
+        <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--red);">${fmt(nextPeriod)}</div>
+        <div style="font-size:11px;color:var(--text-3);">${daysToNext > 0 ? 'in '+daysToNext+' days' : daysToNext === 0 ? 'Today!' : Math.abs(daysToNext)+' days late'}</div>
+      </div>
+      <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Ovulation Day</div>
+        <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--yellow);">${fmt(ovulDate)}</div>
+      </div>
+      <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Fertile Window</div>
+        <div style="font-size:11px;font-weight:600;color:var(--green);">${fmt(fertSDate)} –<br>${fmt(fertEDate)}</div>
+      </div>
+      <div style="background:var(--navy-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;">Cycle Length</div>
+        <div style="font-family:var(--font-h);font-size:18px;font-weight:700;color:var(--cyan);">${cycleLen} days</div>
+        <div style="font-size:11px;color:${cycleLen>=21&&cycleLen<=35?'var(--green)':'var(--red)'};">${cycleLen>=21&&cycleLen<=35?'Normal ✓':'Irregular ⚠️'}</div>
+      </div>
+    </div>
+    ${irregularWarn}`;
+
+  // Draw cycle visual
+  const vizEl = document.getElementById('cycle-days-viz');
+  vizEl.innerHTML = '';
+  for (let d = 1; d <= cycleLen; d++) {
+    const el = document.createElement('div');
+    el.className = 'cday';
+    el.textContent = d;
+    if (d <= periodDur)                  el.classList.add('period');
+    else if (d === ovulDay)              el.classList.add('ovulation');
+    else if (d >= fertStart && d <= fertEnd) el.classList.add('fertile');
+    else                                 el.classList.add('normal');
+    if (d === dayOfCycle)                el.classList.add('today');
+    el.title = d === dayOfCycle ? 'TODAY — Day '+d : 'Day '+d;
+    vizEl.appendChild(el);
+  }
+  document.getElementById('cycle-visual').style.display = 'block';
+}
+
+// ── PCOS ANALYZER ────────────────────────────
+function analyzePCOS() {
+  let score = 0;
+  let checked = [];
+  document.querySelectorAll('.pcos-sym:checked').forEach(el => {
+    score += parseInt(el.dataset.weight || 1);
+    checked.push(el.nextElementSibling.textContent.trim());
+  });
+
+  const cycleLen  = parseInt(document.getElementById('cycle-len').value) || 28;
+  const periodDur = parseInt(document.getElementById('period-dur').value) || 5;
+
+  if (cycleLen < 21 || cycleLen > 35) score += 4;
+  if (periodDur > 7)                  score += 2;
+
+  let risk, riskColor, riskBg, advice, icon;
+
+  if (score <= 3) {
+    risk = 'LOW PCOS Risk'; icon = '✅';
+    riskColor = 'var(--green)'; riskBg = 'rgba(0,255,136,.07)';
+    advice = 'Your symptoms suggest <b>low risk</b> for PCOS. Continue maintaining a healthy lifestyle with regular exercise, balanced diet, and stress management. Annual gynaecologist checkup is recommended.';
+  } else if (score <= 8) {
+    risk = 'MODERATE PCOS Risk'; icon = '⚠️';
+    riskColor = 'var(--yellow)'; riskBg = 'rgba(255,214,0,.07)';
+    advice = 'You have a <b>moderate risk</b> for PCOS/PCOD. Consider getting these tests done: <b>Pelvic Ultrasound, LH/FSH ratio, Testosterone, Fasting Insulin, Blood Sugar.</b> Consult a gynaecologist soon.';
+  } else {
+    risk = 'HIGH PCOS Risk'; icon = '🔴';
+    riskColor = 'var(--red)'; riskBg = 'rgba(255,61,90,.07)';
+    advice = 'You have a <b>high risk</b> for PCOS/PCOD. Please <b>consult a gynaecologist as soon as possible.</b> Recommended tests: Pelvic Ultrasound, Full Hormonal Panel (LH, FSH, AMH, Testosterone, Prolactin), Fasting Insulin, HbA1c. Early treatment significantly improves outcomes.';
+  }
+
+  const pct = Math.min(95, Math.round(score / 20 * 100));
+  const fillColor = score <= 3 ? '#00ff88' : score <= 8 ? '#ffd600' : '#ff3d5a';
+
+  document.getElementById('pcos-result').innerHTML = `
+    <div style="background:${riskBg};border:1px solid ${riskColor}33;border-radius:14px;padding:24px;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:48px;margin-bottom:8px;">${icon}</div>
+        <div style="font-family:var(--font-h);font-size:22px;font-weight:800;color:${riskColor};">${risk}</div>
+        <div style="font-size:13px;color:var(--text-3);margin-top:4px;">Risk Score: ${score} points</div>
+        <div class="pcos-meter" style="margin:12px auto;max-width:300px;"><div class="pcos-fill" style="width:${pct}%;background:${fillColor};"></div></div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--text-2);line-height:1.7;">${advice}</div>
+      ${checked.length > 0 ? `<div style="font-family:var(--font-h);font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:8px;">Selected Symptoms:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${checked.map(s=>`<span style="padding:4px 10px;border-radius:20px;background:var(--navy-3);border:1px solid var(--border);font-size:11px;color:var(--text-2);">${s.substring(0,40)}</span>`).join('')}</div>` : ''}
+      <div style="margin-top:16px;padding:14px;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.15);border-radius:8px;">
+        <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:8px;">💊 Natural PCOS Management Tips:</div>
+        <div style="font-size:12px;color:var(--text-2);line-height:2;">
+          • Exercise 30 min daily — reduces insulin resistance significantly<br>
+          • Low GI diet — avoid white rice, sugar, refined flour<br>
+          • Inositol (Myo-Inositol 2g + D-Chiro-Inositol) supplement — proven to help PCOS<br>
+          • Spearmint tea — reduces testosterone naturally<br>
+          • Vitamin D supplement — low Vit D worsens PCOS<br>
+          • Manage stress — cortisol worsens hormonal imbalance<br>
+          • Sleep 8 hours — poor sleep disrupts hormones significantly
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('pcos-result').style.display = 'block';
+  document.getElementById('pcos-result').scrollIntoView({behavior:'smooth'});
+}
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

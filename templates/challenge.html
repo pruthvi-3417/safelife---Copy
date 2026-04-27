@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>7-Day Challenge – SafeLife AI</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.day-card { background:var(--navy-3);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.2s; }
+.day-card.completed { border-color:var(--green);background:rgba(0,255,136,0.05); }
+.day-card.today { border-color:var(--cyan);background:rgba(0,229,255,0.06);box-shadow:0 0 20px rgba(0,229,255,0.1); }
+.day-card.locked { opacity:0.5; }
+.task-item { display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:var(--text-2); }
+.task-item:last-child { border:none; }
+.task-check { width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all 0.2s; }
+.task-check.done { background:var(--green);border-color:var(--green);color:#fff;font-size:11px; }
+</style>
+</head>
+<body>
+<div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Challenge...</div></div>
+<div id="particles"></div>
+<div class="app">
+{% from 'sidebar.html' import sidebar %}{{ sidebar('challenge') }}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title">📅 7-Day Health Challenge</div>
+  <div class="topbar-right"><span id="progress-badge" style="padding:5px 14px;border-radius:20px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);font-size:12px;font-weight:700;color:var(--cyan);">Day 1 of 7</span></div>
+</div>
+<div class="page-body">
+
+<!-- PROGRESS BAR -->
+<div class="card mb24 anim">
+  <div class="flex-b mb16">
+    <div class="card-title" style="margin-bottom:0;">🚀 Your Challenge Progress</div>
+    <div id="overall-pct" style="font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--cyan);">0%</div>
+  </div>
+  <div style="height:12px;border-radius:6px;background:var(--navy-3);overflow:hidden;margin-bottom:8px;">
+    <div id="overall-bar" style="height:100%;border-radius:6px;background:var(--grad-cyan);width:0%;transition:width 0.5s ease;"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);">
+    <span>Start</span><span>Day 7 Complete</span>
+  </div>
+</div>
+
+<!-- 7 DAY CARDS -->
+<div style="display:flex;flex-direction:column;gap:14px;" id="challenge-days">
+{% set days = [
+  (1,'💧','Hydration Day','Focus entirely on water intake today.',['Drink 8 glasses of water','Set hourly water reminders','No sugary drinks today','Eat 2 water-rich fruits']),
+  (2,'🚶','Movement Day','Make movement a priority today.',['Walk 8,000 steps minimum','Take stairs instead of lift','5-min stretch every 2 hours','Evening 20-min walk']),
+  (3,'😴','Sleep Reset Day','Optimize your sleep tonight.',['Sleep by 10:30 PM','No screen 1 hour before bed','Read or meditate before sleep','Wake up without alarm']),
+  (4,'🥗','Clean Eating Day','Eat only whole, unprocessed foods.',['No junk or packaged food','Cook at home for all meals','Eat 5 servings of vegetables','Avoid sugar completely']),
+  (5,'🧘','Mindfulness Day','Calm your mind and reduce stress.',['10-min morning meditation','Practice deep breathing 3x','Write 3 things you are grateful for','Digital detox for 2 hours']),
+  (6,'💪','Strength Day','Build physical strength.',['30-min workout or yoga','20 push-ups or squats','Plank for 60 seconds','Protein-rich meals']),
+  (7,'🏆','Champion Day','Combine all habits from this week.',['All 5 habits from this week','Take health assessment','Share progress with someone','Plan next week goals']),
+] %}
+{% for day, icon, title, desc, tasks in days %}
+<div class="day-card {% if loop.first %}today{% elif loop.index > 1 %}locked{% endif %}" id="day-{{ day }}">
+  <div class="flex-b" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--grad-cyan);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">{{ icon }}</div>
+      <div>
+        <div style="font-family:var(--font-h);font-size:15px;font-weight:700;color:var(--text-1);">Day {{ day }}: {{ title }}</div>
+        <div style="font-size:12px;color:var(--text-3);">{{ desc }}</div>
+      </div>
+    </div>
+    <div id="day-{{ day }}-badge" style="font-size:20px;">{% if loop.index > 1 %}🔒{% else %}⭐{% endif %}</div>
+  </div>
+  <div>
+    {% for task in tasks %}
+    <div class="task-item">
+      <div class="task-check" id="check-{{ day }}-{{ loop.index }}" onclick="toggleTask({{ day }}, {{ loop.index }})"></div>
+      <span>{{ task }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="margin-top:12px;font-size:11px;color:var(--text-3);" id="day-{{ day }}-progress">0/{{ tasks|length }} tasks done</div>
+</div>
+{% endfor %}
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+const taskCounts = {1:4, 2:4, 3:4, 4:4, 5:4, 6:4, 7:4};
+const state = JSON.parse(localStorage.getItem('challenge_state') || '{}');
+const currentDay = parseInt(localStorage.getItem('challenge_day') || '1');
+
+function toggleTask(day, task) {
+  if (day > currentDay) return;
+  const key = `${day}-${task}`;
+  state[key] = !state[key];
+  localStorage.setItem('challenge_state', JSON.stringify(state));
+  renderState();
+}
+
+function renderState() {
+  let totalDone = 0, totalTasks = 0;
+  for (let d = 1; d <= 7; d++) {
+    let dayDone = 0;
+    const total = taskCounts[d];
+    for (let t = 1; t <= total; t++) {
+      const key = `${d}-${t}`;
+      const el = document.getElementById(`check-${d}-${t}`);
+      if (el) {
+        el.className = 'task-check' + (state[key] ? ' done' : '');
+        el.textContent = state[key] ? '✓' : '';
+        if (state[key]) dayDone++;
+      }
+      totalTasks++;
+    }
+    const prog = document.getElementById(`day-${d}-progress`);
+    if (prog) prog.textContent = `${dayDone}/${total} tasks done`;
+    const badge = document.getElementById(`day-${d}-badge`);
+    const card = document.getElementById(`day-${d}`);
+    if (dayDone === total && d <= currentDay) {
+      if (badge) badge.textContent = '✅';
+      if (card) { card.classList.remove('locked','today'); card.classList.add('completed'); }
+    }
+    totalDone += dayDone;
+  }
+  const pct = Math.round(totalDone / totalTasks * 100);
+  document.getElementById('overall-bar').style.width = pct + '%';
+  document.getElementById('overall-pct').textContent = pct + '%';
+  document.getElementById('progress-badge').textContent = `Day ${currentDay} of 7`;
+}
+
+renderState();
+</script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

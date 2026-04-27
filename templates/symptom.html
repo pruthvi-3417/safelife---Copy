@@ -1,0 +1,37 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Symptom Checker – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading Symptom Checker...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('symptom') }}
+<div class="main"><div class="topbar"><div class="topbar-title">🔍 Symptom Checker</div><div class="topbar-right"><a href="/dashboard" class="btn btn-outline btn-sm">← Back</a></div></div>
+<div class="page-body">
+{% if result %}
+<div class="card anim mb24">
+<div class="card-title">🔍 Selected Symptoms</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+{% for s in selected %}<span class="chip" style="cursor:default;border-color:var(--cyan);color:var(--cyan);">{{ s }}</span>{% endfor %}
+</div>
+<div class="diag-card diag-{{ severity }}">
+<div style="font-size:40px;margin-bottom:12px;">{% if severity=='critical' %}🚨{% elif severity=='high' %}⚠️{% elif severity=='medium' %}🔔{% else %}ℹ️{% endif %}</div>
+<h2 style="font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text-1);margin-bottom:10px;">{{ diagnosis }}</h2>
+<p style="font-size:14px;color:var(--text-2);line-height:1.7;">{{ advice }}</p>
+{% if severity=='critical' %}<div style="margin-top:16px;"><button class="amb-btn" onclick="callAmb()" style="font-size:16px;padding:12px 28px;">🚑 Call 108 Now</button></div>{% endif %}
+</div>
+<a href="/symptom" class="btn btn-outline" style="margin-top:16px;display:inline-flex;width:auto;padding:10px 24px;">Check Again</a>
+</div>
+{% else %}
+<div class="card anim">
+<div class="card-title">Select Your Symptoms</div>
+<p style="color:var(--text-3);font-size:13px;margin-bottom:20px;">Select all symptoms you are currently experiencing. Our AI will analyze and provide a possible diagnosis.</p>
+<form method="POST" action="/symptom">
+<div class="symptom-grid">
+{% for sym in ['Fever','Cough','Fatigue','Headache','Body Pain','Chest Pain','Shortness of Breath','Nausea','Vomiting','Stomach Pain','Dizziness','Joint Pain','Swelling','Frequent Urination','Thirst','Blurred Vision','Pale Skin','Back Pain','Stiffness','Skin Rash','Itching'] %}
+<div>
+<input type="checkbox" class="sym-check" name="symptoms" value="{{ sym.lower() }}" id="s{{ loop.index }}">
+<label class="sym-label" for="s{{ loop.index }}">{{ sym }}</label>
+</div>{% endfor %}
+</div>
+<button type="submit" class="analyze-btn" style="margin-top:20px;">🔍 Analyze Symptoms</button>
+</form>
+</div>{% endif %}
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>

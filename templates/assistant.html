@@ -1,0 +1,37 @@
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>AI Assistant – SafeLife AI</title><link rel="stylesheet" href="/static/css/style.css"></head>
+<body><div id="loader"><div class="loader-heart">🫀</div><div class="loader-bar"><div class="loader-fill"></div></div><div class="loader-text">Loading AI Assistant...</div></div><div id="particles"></div>
+<div class="app">{% from 'sidebar.html' import sidebar %}{{ sidebar('assistant') }}
+<div class="main"><div class="topbar"><div class="topbar-title">🤖 AI Health Assistant</div><div class="topbar-right"><span class="live-badge">Online</span></div></div>
+<div class="page-body">
+<div class="g2 anim" style="align-items:start;">
+<div class="card">
+<div class="card-title">💬 Chat with Health AI</div>
+<div class="quick-chips">
+{% for t in ['BMI','Sleep','Water','Stress','Heart','Diabetes','Exercise','Diet','Blood Pressure','Immunity','Vitamin','Cholesterol'] %}
+<span class="chip" onclick="quickAsk('Tell me about {{ t }}')">{{ t }}</span>{% endfor %}
+</div>
+<div class="chat-win" id="chat-window">
+<div class="msg bot"><div class="msg-av">🤖</div><div class="msg-bubble">👋 Hello <strong>{{ session.user_name }}</strong>! I'm your AI Health Assistant.<br><br>Ask me anything about your health — BMI, sleep, diet, stress, heart, diabetes, vitamins, and more!<br><br>You can click the quick chips above or type your question below. 🏥</div></div>
+</div>
+<div class="chat-row">
+<input type="text" class="chat-input" id="chat-input" placeholder="Ask a health question..." autocomplete="off">
+<button class="btn-send" id="voice-btn" onclick="startVoice()" title="Voice Input" style="background:var(--navy-3);border:1px solid var(--border);margin-right:4px;">🎤</button>
+<button class="btn-send" onclick="sendChat()">➤</button>
+</div>
+<p style="color:var(--text-3);font-size:11px;margin-top:8px;">🎤 Click microphone for voice input (Chrome only)</p>
+</div>
+<div>
+<div class="card mb16">
+<div class="card-title">📚 Topics I Know</div>
+{% for icon,title,sub in [('⚖️','BMI Calculation','Body mass index'),('😴','Sleep Health','Optimal sleep tips'),('💧','Hydration','Daily water needs'),('🧠','Stress & Mental','Coping strategies'),('❤️','Heart Health','Cardio risk'),('🩸','Diabetes','Blood sugar control'),('🏋️','Exercise','Workout guidance'),('🥗','Nutrition','Diet and foods'),('💊','Vitamins','Supplement info'),('🫀','Cholesterol','Heart health')] %}
+<div class="flex-b" style="padding:10px;background:var(--navy-3);border-radius:8px;border:1px solid var(--border);cursor:pointer;margin-bottom:8px;" onclick="quickAsk('Tell me about {{ title }}')">
+<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">{{ icon }}</span><div><div style="font-size:13px;font-weight:500;color:var(--text-1);">{{ title }}</div><div style="font-size:11px;color:var(--text-3);">{{ sub }}</div></div></div>
+<span style="color:var(--text-3);">→</span>
+</div>{% endfor %}
+</div>
+<div class="warn-box">⚠️ This AI provides general health information. Always consult a qualified doctor for medical advice.</div>
+</div>
+</div>
+</div></div></div>
+<script src="/static/js/main.js"></script></body></html>
